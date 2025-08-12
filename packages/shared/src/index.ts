@@ -7,6 +7,9 @@ export interface Question {
   correctAnswer: number;
 }
 
+// Client-safe version without correct answer
+export type ClientQuestion = Omit<Question, 'correctAnswer'>;
+
 export type GameState = 'waiting' | 'playing' | 'finished';
 
 // Player Types
