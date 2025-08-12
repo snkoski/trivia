@@ -22,3 +22,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Audio files
+public/audio/*.mp3
+public/audio/*.wav
+public/audio/*.ogg
+public/audio/*.m4a
+public/audio/*.aac
+public/audio/*.flac
+public/audio/*.wma
+public/audio/*.opus
+
+# Keep the README in audio folder
+!public/audio/README.md
