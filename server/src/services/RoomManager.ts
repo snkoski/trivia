@@ -96,11 +96,37 @@ export class RoomManager {
   }
 
   leaveRoom(roomCode: string, playerId: string): LeaveRoomResult {
-    throw new Error('Not implemented yet');
+    const room = this.rooms.get(roomCode);
+
+    if (!room) {
+      return { success: false, error: 'Room not found' };
+    }
+
+    const playerIndex = room.players.findIndex(p => p.id === playerId);
+    
+    if (playerIndex === -1) {
+      return { success: false, error: 'Player not in room' };
+    }
+
+    const leavingPlayer = room.players[playerIndex];
+    room.players.splice(playerIndex, 1);
+    this.playerRoomMap.delete(playerId);
+
+    // If the leaving player was the host and there are still players
+    if (leavingPlayer.isHost && room.players.length > 0) {
+      room.players[0].isHost = true;
+    }
+
+    // Delete room if empty
+    if (room.players.length === 0) {
+      this.rooms.delete(roomCode);
+    }
+
+    return { success: true };
   }
 
   getRoom(roomCode: string): Room | null {
-    throw new Error('Not implemented yet');
+    return this.rooms.get(roomCode) || null;
   }
 
   getRoomByPlayerId(playerId: string): Room | null {
