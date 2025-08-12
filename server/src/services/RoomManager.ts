@@ -62,7 +62,37 @@ export class RoomManager {
   }
 
   joinRoom(roomCode: string, playerId: string, playerName: string): JoinRoomResult {
-    throw new Error('Not implemented yet');
+    const room = this.rooms.get(roomCode);
+
+    if (!room) {
+      return { success: false, error: 'Room not found' };
+    }
+
+    if (room.players.length >= room.maxPlayers) {
+      return { success: false, error: 'Room is full' };
+    }
+
+    if (room.players.some(p => p.id === playerId)) {
+      return { success: false, error: 'Player already in room' };
+    }
+
+    if (room.state !== 'waiting') {
+      return { success: false, error: 'Game already in progress' };
+    }
+
+    const newPlayer: Player = {
+      id: playerId,
+      name: playerName,
+      score: 0,
+      isConnected: true,
+      hasAnswered: false,
+      isHost: false
+    };
+
+    room.players.push(newPlayer);
+    this.playerRoomMap.set(playerId, roomCode);
+
+    return { success: true, room };
   }
 
   leaveRoom(roomCode: string, playerId: string): LeaveRoomResult {
