@@ -136,6 +136,10 @@ export class RoomManager {
   }
 
   cleanupEmptyRooms(): void {
-    throw new Error('Not implemented yet');
+    for (const [code, room] of this.rooms.entries()) {
+      if (room.players.length === 0) {
+        this.rooms.delete(code);
+      }
+    }
   }
 }
