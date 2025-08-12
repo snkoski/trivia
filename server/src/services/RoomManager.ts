@@ -130,7 +130,9 @@ export class RoomManager {
   }
 
   getRoomByPlayerId(playerId: string): Room | null {
-    throw new Error('Not implemented yet');
+    const roomCode = this.playerRoomMap.get(playerId);
+    if (!roomCode) return null;
+    return this.getRoom(roomCode);
   }
 
   cleanupEmptyRooms(): void {
