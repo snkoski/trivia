@@ -38,8 +38,8 @@ export interface ServerToClientEvents {
   'room-joined': (room: Room) => void;
   'player-joined': (player: Player) => void;
   'player-left': (playerId: string) => void;
-  'game-started': (firstQuestion: Question) => void;
-  'next-question': (question: Question) => void;
+  'game-started': (firstQuestion: ClientQuestion) => void;
+  'next-question': (question: ClientQuestion) => void;
   'player-answered': (playerId: string) => void;
   'round-results': (scores: Record<string, number>, correctAnswer: number) => void;
   'game-ended': (finalScores: Record<string, number>) => void;
