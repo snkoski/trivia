@@ -177,5 +177,59 @@ describe('RoomManager', () => {
       expect(roomManager.getRoom(room1.code)).toBeNull();
       expect(roomManager.getRoom(room2.code)).toBeDefined();
     });
+
+    it('should return count of removed rooms', () => {
+      const room1 = roomManager.createRoom('player1', 'Alice');
+      const room2 = roomManager.createRoom('player2', 'Bob');
+      const room3 = roomManager.createRoom('player3', 'Charlie');
+      
+      // Leave room1 and room3 empty
+      roomManager.leaveRoom(room1.code, 'player1');
+      roomManager.leaveRoom(room3.code, 'player3');
+      
+      const removedCount = roomManager.cleanupEmptyRooms();
+      
+      expect(removedCount).toBe(2);
+    });
+  });
+
+  describe('getAllRooms', () => {
+    it('should return empty array when no rooms exist', () => {
+      const rooms = roomManager.getAllRooms();
+      
+      expect(rooms).toEqual([]);
+      expect(rooms).toHaveLength(0);
+    });
+
+    it('should return all existing rooms', () => {
+      const room1 = roomManager.createRoom('player1', 'Alice');
+      const room2 = roomManager.createRoom('player2', 'Bob');
+      const room3 = roomManager.createRoom('player3', 'Charlie');
+      
+      const rooms = roomManager.getAllRooms();
+      
+      expect(rooms).toHaveLength(3);
+      expect(rooms).toContainEqual(room1);
+      expect(rooms).toContainEqual(room2);
+      expect(rooms).toContainEqual(room3);
+    });
+
+    it('should return current state of rooms after modifications', () => {
+      const room1 = roomManager.createRoom('player1', 'Alice');
+      const room2 = roomManager.createRoom('player2', 'Bob');
+      
+      // Join a player to room1
+      roomManager.joinRoom(room1.code, 'player3', 'Charlie');
+      
+      // Leave room2 empty and clean it up
+      roomManager.leaveRoom(room2.code, 'player2');
+      roomManager.cleanupEmptyRooms();
+      
+      const rooms = roomManager.getAllRooms();
+      
+      expect(rooms).toHaveLength(1);
+      expect(rooms[0].code).toBe(room1.code);
+      expect(rooms[0].players).toHaveLength(2);
+    });
   });
 });
