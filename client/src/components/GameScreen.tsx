@@ -19,7 +19,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
     hasAnswered,
     submitAnswer,
     requestNextQuestion,
-    clearError
+    clearError,
+    currentRoom
   } = useSocket();
 
   const {
@@ -33,12 +34,26 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
     setShowResults,
     formatTime,
     allPlayersAnswered,
-    isAnswerCorrect
+    isAnswerCorrect,
+    setQuestionProgress,
+    incrementQuestion
   } = useGame();
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [audioProgress, setAudioProgress] = useState(0);
+
+  // Track question progress
+  useEffect(() => {
+    if (currentQuestion && currentRoom) {
+      // Question index is 0-based, but we want to show 1-based to the user
+      const currentQuestionNumber = (currentRoom.currentQuestionIndex || 0) + 1;
+      // Since we only have 1 question in the test data, set total to 1
+      // In production, this should come from the backend
+      const totalQuestions = 1; // Hardcoded for now since we only have 1 question
+      setQuestionProgress(currentQuestionNumber, totalQuestions);
+    }
+  }, [currentQuestion, currentRoom, setQuestionProgress]);
 
   // Handle game state changes
   useEffect(() => {

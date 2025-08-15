@@ -171,8 +171,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
 
   // Game reset
   const resetGame = useCallback(() => {
-    setQuestionNumber(0);
-    setTotalQuestions(0);
+    // Don't reset question progress here - it should persist for the results screen
+    // setQuestionNumber(0);
+    // setTotalQuestions(0);
     setTimeRemaining(null);
     setSelectedAnswerState(null);
     setPlayerAnswers({});

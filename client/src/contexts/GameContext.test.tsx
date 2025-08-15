@@ -301,8 +301,9 @@ describe('GameContext', () => {
         result.current.resetGame();
       });
 
-      expect(result.current.questionNumber).toBe(0);
-      expect(result.current.totalQuestions).toBe(0);
+      // Question progress should NOT be reset (persists for results screen)
+      expect(result.current.questionNumber).toBe(5);
+      expect(result.current.totalQuestions).toBe(10);
       expect(result.current.selectedAnswer).toBeNull();
       expect(result.current.playerAnswers).toEqual({});
       expect(result.current.timeRemaining).toBeNull();

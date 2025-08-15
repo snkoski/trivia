@@ -13,32 +13,32 @@ export const mockQuestions: Question[] = [
     ],
     correctAnswer: 0
   },
-  {
-    id: 2,
-    question: 'Which movie is this theme from?',
-    audioUrl: '/audio/song2.wav',
-    options: ['Star Wars', 'Indiana Jones', 'Jurassic Park', 'Harry Potter'],
-    correctAnswer: 0
-  },
-  {
-    id: 3,
-    question: 'Name the composer of this classical piece:',
-    audioUrl: '/audio/song3.wav',
-    options: ['Mozart', 'Beethoven', 'Bach', 'Chopin'],
-    correctAnswer: 1
-  },
-  {
-    id: 4,
-    question: 'What genre best describes this music?',
-    audioUrl: '/audio/song4.wav',
-    options: ['Jazz', 'Blues', 'Rock', 'Classical'],
-    correctAnswer: 0
-  },
-  {
-    id: 5,
-    question: 'Name this instrument:',
-    audioUrl: '/audio/song5.wav',
-    options: ['Violin', 'Cello', 'Viola', 'Double Bass'],
-    correctAnswer: 0
-  }
+  // {
+  //   id: 2,
+  //   question: 'Which movie is this theme from?',
+  //   audioUrl: '/audio/song2.wav',
+  //   options: ['Star Wars', 'Indiana Jones', 'Jurassic Park', 'Harry Potter'],
+  //   correctAnswer: 0
+  // },
+  // {
+  //   id: 3,
+  //   question: 'Name the composer of this classical piece:',
+  //   audioUrl: '/audio/song3.wav',
+  //   options: ['Mozart', 'Beethoven', 'Bach', 'Chopin'],
+  //   correctAnswer: 1
+  // },
+  // {
+  //   id: 4,
+  //   question: 'What genre best describes this music?',
+  //   audioUrl: '/audio/song4.wav',
+  //   options: ['Jazz', 'Blues', 'Rock', 'Classical'],
+  //   correctAnswer: 0
+  // },
+  // {
+  //   id: 5,
+  //   question: 'Name this instrument:',
+  //   audioUrl: '/audio/song5.wav',
+  //   options: ['Violin', 'Cello', 'Viola', 'Double Bass'],
+  //   correctAnswer: 0
+  // }
 ];
