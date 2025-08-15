@@ -1,55 +1,106 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
-import type { GameState } from './types';
-import { mockQuestions } from './data/questions';
-import { StartScreen } from './components/StartScreen';
+import { SocketProvider } from './contexts/SocketContext';
+import { GameProvider } from './contexts/GameContext';
+import { LobbyScreen } from './components/LobbyScreen';
+import { WaitingRoom } from './components/WaitingRoom';
 import { GameScreen } from './components/GameScreen';
-import { EndScreen } from './components/EndScreen';
+import { ResultsScreen } from './components/ResultsScreen';
+import { useSocket } from './contexts/SocketContext';
 
-function App() {
-  const [gameState, setGameState] = useState<GameState>('start');
-  const [finalScore, setFinalScore] = useState(0);
+type AppState = 'lobby' | 'waiting' | 'playing' | 'finished';
 
-  const handleStartGame = () => {
-    setGameState('playing');
-    setFinalScore(0);
+const AppContent: React.FC = () => {
+  const [appState, setAppState] = useState<AppState>('lobby');
+  const { roomCode, gameState, isConnected } = useSocket();
+
+  // Sync app state with socket game state
+  useEffect(() => {
+    if (!roomCode) {
+      setAppState('lobby');
+    } else if (gameState === 'waiting') {
+      setAppState('waiting');
+    } else if (gameState === 'playing') {
+      setAppState('playing');
+    } else if (gameState === 'finished') {
+      setAppState('finished');
+    }
+  }, [roomCode, gameState]);
+
+  const handleRoomJoined = () => {
+    setAppState('waiting');
   };
 
-  const handleGameEnd = (score: number) => {
-    setFinalScore(score);
-    setGameState('end');
+  const handleGameStart = () => {
+    setAppState('playing');
   };
 
-  const handleRestart = () => {
-    setGameState('playing');
-    setFinalScore(0);
+  const handleGameEnd = () => {
+    setAppState('finished');
+  };
+
+  const handleLeaveRoom = () => {
+    setAppState('lobby');
+  };
+
+  const handleNewGame = () => {
+    setAppState('waiting');
+  };
+
+  const renderConnectionStatus = () => {
+    if (!isConnected) {
+      return (
+        <div className="connection-status disconnected">
+          <span>⚠️ Connecting to server...</span>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
     <div className="app">
       <div className="game-container">
-        <h1 className="game-title">Music Trivia Game</h1>
+        <header className="app-header">
+          <h1 className="game-title">Music Trivia Game</h1>
+          {renderConnectionStatus()}
+        </header>
 
-        {gameState === 'start' && (
-          <StartScreen onStart={handleStartGame} />
-        )}
+        <main className="app-main">
+          {appState === 'lobby' && (
+            <LobbyScreen onRoomJoined={handleRoomJoined} />
+          )}
 
-        {gameState === 'playing' && (
-          <GameScreen 
-            questions={mockQuestions} 
-            onGameEnd={handleGameEnd} 
-          />
-        )}
+          {appState === 'waiting' && (
+            <WaitingRoom 
+              onGameStart={handleGameStart}
+              onLeaveRoom={handleLeaveRoom}
+            />
+          )}
 
-        {gameState === 'end' && (
-          <EndScreen
-            score={finalScore}
-            totalQuestions={mockQuestions.length}
-            onRestart={handleRestart}
-          />
-        )}
+          {appState === 'playing' && (
+            <GameScreen onGameEnd={handleGameEnd} />
+          )}
+
+          {appState === 'finished' && (
+            <ResultsScreen 
+              onNewGame={handleNewGame}
+              onLeaveRoom={handleLeaveRoom}
+            />
+          )}
+        </main>
       </div>
     </div>
+  );
+};
+
+function App() {
+  return (
+    <SocketProvider>
+      <GameProvider>
+        <AppContent />
+      </GameProvider>
+    </SocketProvider>
   );
 }
 

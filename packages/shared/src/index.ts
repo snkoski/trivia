@@ -35,7 +35,7 @@ export interface Room {
 // Socket Event Types
 export interface ServerToClientEvents {
   'room-created': (roomCode: string) => void;
-  'room-joined': (room: Room) => void;
+  'room-joined': (data: { room: Room; currentPlayerId: string }) => void;
   'player-joined': (player: Player) => void;
   'player-left': (playerId: string) => void;
   'game-started': (firstQuestion: ClientQuestion) => void;

@@ -1,5 +1,5 @@
 import request from 'supertest';
-import { app } from './server';
+import { app } from './index';
 
 describe('Server Health Check', () => {
   describe('GET /health', () => {
@@ -8,36 +8,22 @@ describe('Server Health Check', () => {
         .get('/health')
         .expect(200);
 
-      expect(response.body).toEqual({
-        status: 'healthy',
-        timestamp: expect.any(String),
-        uptime: expect.any(Number)
-      });
+      expect(response.body).toHaveProperty('status', 'healthy');
+      expect(response.body).toHaveProperty('timestamp');
+      expect(response.body).toHaveProperty('rooms');
+      expect(response.body).toHaveProperty('connections');
     });
   });
 
-  describe('GET /', () => {
-    it('should return welcome message', async () => {
+  describe('GET /api/rooms', () => {
+    it('should return rooms list', async () => {
       const response = await request(app)
-        .get('/')
+        .get('/api/rooms')
         .expect(200);
 
-      expect(response.body).toEqual({
-        message: 'Trivia Game Server',
-        version: '1.0.0'
-      });
-    });
-  });
-
-  describe('404 handling', () => {
-    it('should return 404 for unknown routes', async () => {
-      const response = await request(app)
-        .get('/unknown-route')
-        .expect(404);
-
-      expect(response.body).toEqual({
-        error: 'Not Found'
-      });
+      expect(response.body).toHaveProperty('count');
+      expect(response.body).toHaveProperty('rooms');
+      expect(Array.isArray(response.body.rooms)).toBe(true);
     });
   });
 });

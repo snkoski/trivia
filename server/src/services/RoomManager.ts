@@ -135,11 +135,18 @@ export class RoomManager {
     return this.getRoom(roomCode);
   }
 
-  cleanupEmptyRooms(): void {
+  cleanupEmptyRooms(): number {
+    let removedCount = 0;
     for (const [code, room] of this.rooms.entries()) {
       if (room.players.length === 0) {
         this.rooms.delete(code);
+        removedCount++;
       }
     }
+    return removedCount;
+  }
+
+  getAllRooms(): Room[] {
+    return Array.from(this.rooms.values());
   }
 }

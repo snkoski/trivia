@@ -89,7 +89,7 @@ export class SocketHandler {
       socket.join(room.code);
       
       socket.emit('room-created', room.code);
-      socket.emit('room-joined', room);
+      socket.emit('room-joined', { room, currentPlayerId: socket.data.playerId });
       
       console.log(`Room ${room.code} created by ${playerName}`);
     } catch (error) {
@@ -112,7 +112,7 @@ export class SocketHandler {
       socket.data.currentRoom = roomCode;
       socket.join(roomCode);
       
-      socket.emit('room-joined', result.room!);
+      socket.emit('room-joined', { room: result.room!, currentPlayerId: socket.data.playerId });
       
       // Notify other players in the room
       const joinedPlayer = result.room!.players.find(p => p.id === socket.data.playerId);

@@ -183,13 +183,23 @@ describe('RoomManager', () => {
       const room2 = roomManager.createRoom('player2', 'Bob');
       const room3 = roomManager.createRoom('player3', 'Charlie');
       
-      // Leave room1 and room3 empty
-      roomManager.leaveRoom(room1.code, 'player1');
-      roomManager.leaveRoom(room3.code, 'player3');
+      // Join and disconnect players to leave rooms in a disconnected state
+      // This simulates players disconnecting without proper cleanup
+      roomManager.joinRoom(room1.code, 'player4', 'David');
+      roomManager.joinRoom(room3.code, 'player5', 'Eve');
+      
+      // Manually clear players to simulate disconnections without proper leave
+      const r1 = roomManager.getRoom(room1.code);
+      const r3 = roomManager.getRoom(room3.code);
+      if (r1) r1.players = [];
+      if (r3) r3.players = [];
       
       const removedCount = roomManager.cleanupEmptyRooms();
       
       expect(removedCount).toBe(2);
+      expect(roomManager.getRoom(room1.code)).toBeNull();
+      expect(roomManager.getRoom(room2.code)).toBeDefined();
+      expect(roomManager.getRoom(room3.code)).toBeNull();
     });
   });
 

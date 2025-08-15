@@ -1,80 +1,323 @@
-import { useState } from 'react';
-import type { Question } from '../types';
-import { AudioPlayer } from './AudioPlayer';
-import { QuestionOptions } from './QuestionOptions';
-import { GameHeader } from './GameHeader';
+import React, { useEffect, useRef, useState } from 'react';
+import { useSocket } from '../contexts/SocketContext';
+import { useGame } from '../contexts/GameContext';
 
 interface GameScreenProps {
-  questions: Question[];
-  onGameEnd: (finalScore: number) => void;
+  onGameEnd?: () => void;
 }
 
-export function GameScreen({ questions, onGameEnd }: GameScreenProps) {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [shouldPauseAudio, setShouldPauseAudio] = useState(false);
+export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
+  const {
+    isConnected,
+    error,
+    currentQuestion,
+    players,
+    isHost,
+    gameState,
+    scores,
+    correctAnswer,
+    hasAnswered,
+    submitAnswer,
+    requestNextQuestion,
+    clearError
+  } = useSocket();
 
-  const currentQuestion = questions[currentQuestionIndex];
+  const {
+    questionNumber,
+    totalQuestions,
+    timeRemaining,
+    selectedAnswer,
+    showResults,
+    setSelectedAnswer,
+    clearSelectedAnswer,
+    setShowResults,
+    formatTime,
+    allPlayersAnswered,
+    isAnswerCorrect
+  } = useGame();
+
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
+
+  // Handle game state changes
+  useEffect(() => {
+    if (gameState === 'finished' && onGameEnd) {
+      onGameEnd();
+    }
+  }, [gameState, onGameEnd]);
+
+  // Auto-show results when all players have answered
+  useEffect(() => {
+    if (allPlayersAnswered(players) && !showResults && correctAnswer !== null) {
+      setShowResults(true);
+    }
+  }, [players, showResults, correctAnswer, allPlayersAnswered, setShowResults]);
+
+  // Handle audio playback
+  useEffect(() => {
+    if (currentQuestion?.audioUrl && audioRef.current) {
+      audioRef.current.src = currentQuestion.audioUrl;
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => console.log('Audio autoplay failed:', err));
+      }
+    }
+  }, [currentQuestion?.audioUrl]);
+
+  // Clear selected answer when new question arrives
+  useEffect(() => {
+    clearSelectedAnswer();
+    setShowResults(false);
+  }, [currentQuestion?.id, clearSelectedAnswer, setShowResults]);
 
   const handleAnswerSelect = (optionIndex: number) => {
-    if (showResult) return;
+    if (!hasAnswered && !showResults) {
+      setSelectedAnswer(optionIndex);
+    }
+  };
 
-    setSelectedAnswer(optionIndex);
-    setShowResult(true);
-    setShouldPauseAudio(true);
-
-    if (optionIndex === currentQuestion.correctAnswer) {
-      setScore(score + 1);
+  const handleSubmitAnswer = () => {
+    if (selectedAnswer !== null) {
+      submitAnswer(selectedAnswer);
     }
   };
 
   const handleNextQuestion = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(null);
-      setShowResult(false);
-      setShouldPauseAudio(false);
-    } else {
-      onGameEnd(score);
+    requestNextQuestion();
+  };
+
+  const handleAudioPlay = () => {
+    if (audioRef.current) {
+      audioRef.current.play();
+      setIsAudioPlaying(true);
     }
   };
 
-  return (
-    <div className="game-screen">
-      <GameHeader
-        currentQuestion={currentQuestionIndex + 1}
-        totalQuestions={questions.length}
-        score={score}
-      />
+  const handleAudioPause = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsAudioPlaying(false);
+    }
+  };
 
-      <div className="question-container">
-        <h2 className="question-text">{currentQuestion.question}</h2>
+  const handleAudioTimeUpdate = () => {
+    if (audioRef.current) {
+      const progress = (audioRef.current.currentTime / audioRef.current.duration) * 100;
+      setAudioProgress(isNaN(progress) ? 0 : progress);
+    }
+  };
 
-        {currentQuestion.audioUrl && (
-          <AudioPlayer
-            audioUrl={currentQuestion.audioUrl}
-            shouldPause={shouldPauseAudio}
-          />
-        )}
+  const handleAudioEnded = () => {
+    setIsAudioPlaying(false);
+    setAudioProgress(0);
+  };
 
-        <QuestionOptions
-          options={currentQuestion.options}
-          selectedAnswer={selectedAnswer}
-          correctAnswer={currentQuestion.correctAnswer}
-          showResult={showResult}
-          onAnswerSelect={handleAnswerSelect}
-        />
+  const renderConnectionStatus = () => {
+    if (!isConnected) {
+      return (
+        <div className="connection-banner warning">
+          <span>⚠️ Reconnecting...</span>
+        </div>
+      );
+    }
+    return null;
+  };
 
-        {showResult && (
-          <button className="btn btn-primary next-btn" onClick={handleNextQuestion}>
-            {currentQuestionIndex < questions.length - 1
-              ? 'Next Question'
-              : 'See Results'}
-          </button>
+  const renderError = () => {
+    if (!error) return null;
+    
+    return (
+      <div className="error-banner">
+        <span className="error-message">{error}</span>
+        <button onClick={clearError} className="dismiss-button">
+          Dismiss
+        </button>
+      </div>
+    );
+  };
+
+  const renderQuestionHeader = () => (
+    <div className="question-header">
+      <div className="question-progress">
+        <h2>Question {questionNumber} of {totalQuestions}</h2>
+        {timeRemaining !== null && (
+          <div className={`timer ${timeRemaining <= 10 ? 'timer-warning' : ''}`}>
+            {formatTime(timeRemaining)}
+          </div>
         )}
       </div>
     </div>
   );
-}
+
+  const renderAudioPlayer = () => {
+    if (!currentQuestion?.audioUrl) return null;
+
+    return (
+      <div className="audio-player" data-testid="audio-player">
+        <audio
+          ref={audioRef}
+          onPlay={() => setIsAudioPlaying(true)}
+          onPause={() => setIsAudioPlaying(false)}
+          onTimeUpdate={handleAudioTimeUpdate}
+          onEnded={handleAudioEnded}
+        />
+        <div className="audio-controls">
+          <button 
+            onClick={isAudioPlaying ? handleAudioPause : handleAudioPlay}
+            className="audio-control-button"
+            aria-label={isAudioPlaying ? 'Pause audio' : 'Play audio'}
+          >
+            {isAudioPlaying ? 'Pause' : 'Play'}
+          </button>
+          <div className="audio-progress">
+            <div 
+              className="audio-progress-bar" 
+              style={{ width: `${audioProgress}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderQuestion = () => {
+    if (!currentQuestion) return null;
+
+    return (
+      <div className="question-container">
+        <h1 className="question-text">{currentQuestion.question}</h1>
+        {renderAudioPlayer()}
+      </div>
+    );
+  };
+
+  const renderAnswerOptions = () => {
+    if (!currentQuestion) return null;
+
+    return (
+      <div className="answer-options">
+        {currentQuestion.options.map((option, index) => {
+          const isSelected = selectedAnswer === index;
+          const isCorrect = showResults && correctAnswer === index;
+          const isIncorrect = showResults && selectedAnswer === index && correctAnswer !== index;
+
+          let className = 'answer-option';
+          if (isSelected) className += ' selected';
+          if (isCorrect) className += ' correct';
+          if (isIncorrect) className += ' incorrect';
+
+          return (
+            <button
+              key={index}
+              className={className}
+              onClick={() => handleAnswerSelect(index)}
+              disabled={hasAnswered || showResults}
+              aria-label={`Answer option ${index + 1}: ${option}`}
+            >
+              <span className="option-letter">{String.fromCharCode(65 + index)}</span>
+              <span className="option-text">{option}</span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderSubmitButton = () => {
+    if (hasAnswered || showResults || selectedAnswer === null) return null;
+
+    return (
+      <div className="submit-container">
+        <button
+          onClick={handleSubmitAnswer}
+          className="submit-button primary-button"
+        >
+          Submit Answer
+        </button>
+      </div>
+    );
+  };
+
+  const renderResults = () => {
+    if (!showResults || correctAnswer === null) return null;
+
+    const userCorrect = isAnswerCorrect(selectedAnswer, correctAnswer);
+    const correctOptionText = currentQuestion?.options[correctAnswer];
+
+    return (
+      <div className="results-container">
+        <div className="result-message">
+          {selectedAnswer !== null ? (
+            userCorrect ? (
+              <span className="correct-message">✅ You got it right!</span>
+            ) : (
+              <span className="incorrect-message">❌ Incorrect</span>
+            )
+          ) : (
+            <span className="no-answer-message">⏰ Time's up!</span>
+          )}
+        </div>
+        
+        <div className="correct-answer">
+          Correct Answer: {correctOptionText}
+        </div>
+
+        {isHost && (
+          <div className="host-controls">
+            <button
+              onClick={handleNextQuestion}
+              className="next-question-button primary-button"
+            >
+              Next Question
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderPlayerStatus = () => (
+    <div className="player-status">
+      <h2>Players</h2>
+      <div className="players-grid">
+        {players.map(player => (
+          <div key={player.id} className="player-status-card">
+            <div className="player-info">
+              <span className="player-name">{player.name}</span>
+              <span className="player-score">{scores[player.id] || 0}</span>
+            </div>
+            <div className="player-answer-status">
+              {player.hasAnswered ? (
+                <span className="answered">✓ Answered</span>
+              ) : (
+                <span className="waiting">⏳ Waiting</span>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (!currentQuestion) {
+    return (
+      <div className="game-screen loading">
+        <p>Loading question...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="game-screen">
+      {renderConnectionStatus()}
+      {renderError()}
+      {renderQuestionHeader()}
+      {renderQuestion()}
+      {renderAnswerOptions()}
+      {renderSubmitButton()}
+      {renderResults()}
+      {renderPlayerStatus()}
+    </div>
+  );
+};
