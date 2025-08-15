@@ -190,13 +190,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   }, []);
 
   const getLeaderboard = useCallback((scores: Record<string, number>, players: Player[]): LeaderboardEntry[] => {
+    // Handle undefined or null scores
+    if (!scores || typeof scores !== 'object') {
+      return [];
+    }
+    
     return Object.entries(scores)
       .map(([playerId, score]) => {
         const player = players.find(p => p.id === playerId);
         return {
           id: playerId,
           name: player?.name || 'Unknown',
-          score
+          score: score || 0
         };
       })
       .sort((a, b) => b.score - a.score)

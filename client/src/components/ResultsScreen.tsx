@@ -29,7 +29,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({ onNewGame, onLeave
     getLeaderboard
   } = useGame();
 
-  const leaderboard = getLeaderboard();
+  const leaderboard = getLeaderboard(scores, players);
   const currentPlayerName = players.find(p => p.id === socket?.id)?.name || '';
 
   const handleNewGame = () => {

@@ -379,5 +379,56 @@ describe('GameContext', () => {
       expect(result.current.isAnswerCorrect(null, 2)).toBe(false);
       expect(result.current.isAnswerCorrect(2, null)).toBe(false);
     });
+
+    it('should handle undefined scores in getLeaderboard', () => {
+      const { result } = renderHook(() => useGame(), {
+        wrapper: ({ children }) => <GameProvider>{children}</GameProvider>
+      });
+
+      const players = [
+        { id: 'player1', name: 'Alice', score: 0, isConnected: true, hasAnswered: false, isHost: true }
+      ];
+
+      expect(result.current.getLeaderboard(undefined as any, players)).toEqual([]);
+      expect(result.current.getLeaderboard(null as any, players)).toEqual([]);
+    });
+
+    it('should return sorted leaderboard with ranks', () => {
+      const { result } = renderHook(() => useGame(), {
+        wrapper: ({ children }) => <GameProvider>{children}</GameProvider>
+      });
+
+      const scores = { player1: 150, player2: 200, player3: 100 };
+      const players = [
+        { id: 'player1', name: 'Alice', score: 0, isConnected: true, hasAnswered: false, isHost: true },
+        { id: 'player2', name: 'Bob', score: 0, isConnected: true, hasAnswered: false, isHost: false },
+        { id: 'player3', name: 'Charlie', score: 0, isConnected: true, hasAnswered: false, isHost: false }
+      ];
+
+      const leaderboard = result.current.getLeaderboard(scores, players);
+      
+      expect(leaderboard).toEqual([
+        { id: 'player2', name: 'Bob', score: 200, rank: 1 },
+        { id: 'player1', name: 'Alice', score: 150, rank: 2 },
+        { id: 'player3', name: 'Charlie', score: 100, rank: 3 }
+      ]);
+    });
+
+    it('should handle missing players with Unknown name', () => {
+      const { result } = renderHook(() => useGame(), {
+        wrapper: ({ children }) => <GameProvider>{children}</GameProvider>
+      });
+
+      const scores = { player1: 150, player2: 200 };
+      const players = [
+        { id: 'player1', name: 'Alice', score: 0, isConnected: true, hasAnswered: false, isHost: true }
+        // player2 is missing from players array
+      ];
+
+      const leaderboard = result.current.getLeaderboard(scores, players);
+      
+      expect(leaderboard[0].name).toBe('Unknown'); // player2
+      expect(leaderboard[1].name).toBe('Alice'); // player1
+    });
   });
 });
