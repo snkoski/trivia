@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
 import cors from 'cors';
+import path from 'path';
 import { RoomManager } from './services/RoomManager';
 import { SocketHandler } from './socket/SocketHandler';
 import { ClientToServerEvents, ServerToClientEvents } from '../../packages/shared/dist';
@@ -16,6 +17,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Serve static audio files from client's public directory
+app.use('/audio', express.static(path.join(__dirname, '../../client/public/audio')));
 
 // Configure Socket.IO with CORS
 const io = new SocketIOServer<ClientToServerEvents, ServerToClientEvents>(httpServer, {

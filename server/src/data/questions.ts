@@ -3,32 +3,42 @@ import { Question } from '../../../packages/shared/dist';
 export const mockQuestions: Question[] = [
   {
     id: 1,
-    question: 'What is 2 + 2?',
-    options: ['3', '4', '5', '6'],
+    question: 'Name this song or artist:',
+    audioUrl: 'http://localhost:3001/audio/song1.mp3',
+    options: [
+      'The Beatles - Hey Jude',
+      'The Rolling Stones - Paint It Black',
+      'Led Zeppelin - Stairway to Heaven',
+      'Pink Floyd - Wish You Were Here'
+    ],
+    correctAnswer: 0
+  },
+  {
+    id: 2,
+    question: 'Which movie is this theme from?',
+    audioUrl: 'http://localhost:3001/audio/song2.wav',
+    options: ['Star Wars', 'Indiana Jones', 'Jurassic Park', 'Harry Potter'],
+    correctAnswer: 0
+  },
+  {
+    id: 3,
+    question: 'Name the composer of this classical piece:',
+    audioUrl: 'http://localhost:3001/audio/song3.wav',
+    options: ['Mozart', 'Beethoven', 'Bach', 'Chopin'],
     correctAnswer: 1
+  },
+  {
+    id: 4,
+    question: 'What genre best describes this music?',
+    audioUrl: 'http://localhost:3001/audio/song4.wav',
+    options: ['Jazz', 'Blues', 'Rock', 'Classical'],
+    correctAnswer: 0
+  },
+  {
+    id: 5,
+    question: 'Name this instrument:',
+    audioUrl: 'http://localhost:3001/audio/song5.wav',
+    options: ['Violin', 'Cello', 'Viola', 'Double Bass'],
+    correctAnswer: 0
   }
-  // {
-  //   id: 2,
-  //   question: 'What is the capital of France?',
-  //   options: ['London', 'Berlin', 'Paris', 'Madrid'],
-  //   correctAnswer: 2
-  // },
-  // {
-  //   id: 3,
-  //   question: 'What color is the sky?',
-  //   options: ['Red', 'Green', 'Blue', 'Yellow'],
-  //   correctAnswer: 2
-  // },
-  // {
-  //   id: 4,
-  //   question: 'Who painted the Mona Lisa?',
-  //   options: ['Vincent van Gogh', 'Pablo Picasso', 'Leonardo da Vinci', 'Michelangelo'],
-  //   correctAnswer: 2
-  // },
-  // {
-  //   id: 5,
-  //   question: 'What is the largest ocean on Earth?',
-  //   options: ['Atlantic Ocean', 'Indian Ocean', 'Arctic Ocean', 'Pacific Ocean'],
-  //   correctAnswer: 3
-  // }
 ];
