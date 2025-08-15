@@ -386,6 +386,50 @@ describe('SocketContext', () => {
       expect(result.current.hasAnswered).toBe(false);
     });
 
+    it('should reset all players hasAnswered status on game-started', async () => {
+      const { result } = renderHook(() => useSocket(), {
+        wrapper: ({ children }) => <SocketProvider>{children}</SocketProvider>
+      });
+
+      // First, set up players with hasAnswered = true from previous game
+      const mockRoom = {
+        code: 'ABC123',
+        players: [
+          { id: 'player1', name: 'Alice', score: 100, isConnected: true, hasAnswered: true, isHost: true },
+          { id: 'player2', name: 'Bob', score: 150, isConnected: true, hasAnswered: true, isHost: false }
+        ],
+        state: 'waiting' as const,
+        currentQuestionIndex: 0,
+        maxPlayers: 8,
+        createdAt: new Date()
+      };
+
+      act(() => {
+        const callback = vi.mocked(socketService.onRoomJoined).mock.calls[0][0];
+        callback({ room: mockRoom, currentPlayerId: 'player1' });
+      });
+
+      expect(result.current.players[0].hasAnswered).toBe(true);
+      expect(result.current.players[1].hasAnswered).toBe(true);
+
+      // Now start a new game
+      const mockQuestion = {
+        id: 1,
+        question: 'First question of new game',
+        options: ['A', 'B', 'C', 'D']
+      };
+
+      act(() => {
+        const callback = vi.mocked(socketService.onGameStarted).mock.calls[0][0];
+        callback(mockQuestion);
+      });
+
+      // All players should have hasAnswered reset to false for the new game
+      expect(result.current.players[0].hasAnswered).toBe(false);
+      expect(result.current.players[1].hasAnswered).toBe(false);
+      expect(result.current.gameState).toBe('playing');
+    });
+
     it('should handle next-question event', async () => {
       const mockQuestion = {
         id: 2,
@@ -405,6 +449,49 @@ describe('SocketContext', () => {
       expect(result.current.currentQuestion).toEqual(mockQuestion);
       expect(result.current.hasAnswered).toBe(false);
       expect(result.current.correctAnswer).toBeNull();
+    });
+
+    it('should reset all players hasAnswered status on next-question', async () => {
+      const { result } = renderHook(() => useSocket(), {
+        wrapper: ({ children }) => <SocketProvider>{children}</SocketProvider>
+      });
+
+      // First, set up players with hasAnswered = true
+      const mockRoom = {
+        code: 'ABC123',
+        players: [
+          { id: 'player1', name: 'Alice', score: 0, isConnected: true, hasAnswered: true, isHost: true },
+          { id: 'player2', name: 'Bob', score: 0, isConnected: true, hasAnswered: true, isHost: false }
+        ],
+        state: 'playing' as const,
+        currentQuestionIndex: 0,
+        maxPlayers: 8,
+        createdAt: new Date()
+      };
+
+      act(() => {
+        const callback = vi.mocked(socketService.onRoomJoined).mock.calls[0][0];
+        callback({ room: mockRoom, currentPlayerId: 'player1' });
+      });
+
+      expect(result.current.players[0].hasAnswered).toBe(true);
+      expect(result.current.players[1].hasAnswered).toBe(true);
+
+      // Now trigger next question
+      const mockQuestion = {
+        id: 2,
+        question: 'Next question',
+        options: ['A', 'B', 'C', 'D']
+      };
+
+      act(() => {
+        const callback = vi.mocked(socketService.onNextQuestion).mock.calls[0][0];
+        callback(mockQuestion);
+      });
+
+      // All players should have hasAnswered reset to false
+      expect(result.current.players[0].hasAnswered).toBe(false);
+      expect(result.current.players[1].hasAnswered).toBe(false);
     });
 
     it('should handle round-results event', async () => {

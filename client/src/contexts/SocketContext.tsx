@@ -131,12 +131,16 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       setCurrentQuestion(firstQuestion);
       setHasAnswered(false);
       setCorrectAnswer(null);
+      // Reset all players' hasAnswered status for the game start
+      setPlayers(prev => prev.map(p => ({ ...p, hasAnswered: false })));
     });
 
     socketService.onNextQuestion((question) => {
       setCurrentQuestion(question);
       setHasAnswered(false);
       setCorrectAnswer(null);
+      // Reset all players' hasAnswered status for the new question
+      setPlayers(prev => prev.map(p => ({ ...p, hasAnswered: false })));
     });
 
     socketService.onPlayerAnswered((playerId) => {
