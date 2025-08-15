@@ -47,6 +47,7 @@ describe('ResultsScreen', () => {
     submitAnswer: vi.fn(),
     requestNextQuestion: vi.fn(),
     socket: { id: 'player1' },
+    currentPlayerId: 'player1', // Added currentPlayerId
     createRoom: mockCreateRoom,
     joinRoom: vi.fn(),
     leaveRoom: mockLeaveRoom,
@@ -183,6 +184,10 @@ describe('ResultsScreen', () => {
       const newGameButton = screen.getByRole('button', { name: /New Game/i });
       await user.click(newGameButton);
       
+      // Wait for the setTimeout in handleNewGame
+      await new Promise(resolve => setTimeout(resolve, 150));
+      
+      expect(mockLeaveRoom).toHaveBeenCalled();
       expect(mockCreateRoom).toHaveBeenCalledWith('Alice');
     });
 
@@ -190,7 +195,8 @@ describe('ResultsScreen', () => {
       vi.mocked(useSocket).mockReturnValue({
         ...defaultMockSocket,
         isHost: false,
-        socket: { id: 'player2' }
+        socket: { id: 'player2' },
+        currentPlayerId: 'player2'
       });
 
       render(<ResultsScreen />);
@@ -297,6 +303,9 @@ describe('ResultsScreen', () => {
       
       const newGameButton = screen.getByRole('button', { name: /New Game/i });
       await user.click(newGameButton);
+      
+      // Wait for the setTimeout in handleNewGame
+      await new Promise(resolve => setTimeout(resolve, 150));
       
       expect(onNewGame).toHaveBeenCalled();
     });

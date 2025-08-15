@@ -18,7 +18,8 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({ onNewGame, onLeave
     leaveRoom,
     createRoom,
     socket,
-    clearError
+    clearError,
+    currentPlayerId
   } = useSocket();
 
   const {
@@ -30,14 +31,21 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({ onNewGame, onLeave
   } = useGame();
 
   const leaderboard = getLeaderboard(scores, players);
-  const currentPlayerName = players.find(p => p.id === socket?.id)?.name || '';
+  const currentPlayer = players.find(p => p.id === currentPlayerId);
+  const currentPlayerName = currentPlayer?.name || '';
 
   const handleNewGame = () => {
     if (isHost && currentPlayerName) {
-      createRoom(currentPlayerName);
-      if (onNewGame) {
-        onNewGame();
-      }
+      // First leave the current room
+      leaveRoom();
+      // Then create a new room
+      // Use setTimeout to ensure the leave operation completes first
+      setTimeout(() => {
+        createRoom(currentPlayerName);
+        if (onNewGame) {
+          onNewGame();
+        }
+      }, 100);
     }
   };
 
