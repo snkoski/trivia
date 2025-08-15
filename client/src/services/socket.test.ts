@@ -40,7 +40,7 @@ describe('SocketService', () => {
         'http://localhost:3001',
         expect.objectContaining({
           withCredentials: true,
-          transports: ['websocket', 'polling'],
+          transports: ['polling', 'websocket'],
           reconnection: true,
           reconnectionDelay: 1000,
           reconnectionAttempts: 5

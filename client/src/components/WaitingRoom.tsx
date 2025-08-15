@@ -57,7 +57,7 @@ export const WaitingRoom: React.FC<WaitingRoomProps> = ({ onGameStart, onLeaveRo
   };
 
   const canStartGame = (): boolean => {
-    return players.length >= 2 && isHost && isConnected; // Need 2+ players
+    return players.length >= 1 && isHost && isConnected; // Allow single player for testing
   };
 
   const getMinimumPlayersMessage = (): string => {
@@ -157,20 +157,11 @@ export const WaitingRoom: React.FC<WaitingRoomProps> = ({ onGameStart, onLeaveRo
   };
 
   const renderGameControls = () => {
-    // Debug logging
-    console.log('WaitingRoom Debug:', {
-      isHost,
-      playersCount: players.length,
-      isConnected,
-      canStart: canStartGame(),
-      players: players.map(p => ({ id: p.id, name: p.name, isHost: p.isHost }))
-    });
-    
     if (isHost) {
       return (
         <div className="game-controls">
           <div className="start-game-section">
-            {players.length < 2 && (
+            {players.length < 1 && (
               <p className="minimum-players-message">
                 {getMinimumPlayersMessage()}
               </p>

@@ -36,7 +36,10 @@ describe('SocketContext', () => {
   beforeEach(() => {
     mockSocket = {
       id: 'test-socket-id',
-      connected: true
+      connected: true,
+      on: vi.fn(),
+      off: vi.fn(),
+      emit: vi.fn()
     };
     
     vi.mocked(socketService.getSocket).mockReturnValue(mockSocket);
@@ -298,12 +301,13 @@ describe('SocketContext', () => {
 
       act(() => {
         const callback = vi.mocked(socketService.onRoomJoined).mock.calls[0][0];
-        callback(mockRoom);
+        callback({ room: mockRoom, currentPlayerId: 'player1' });
       });
 
       expect(result.current.currentRoom).toEqual(mockRoom);
       expect(result.current.roomCode).toBe('ABC123');
       expect(result.current.players).toEqual(mockRoom.players);
+      expect(result.current.currentPlayerId).toBe('player1');
     });
 
     it('should handle player-joined event', async () => {
@@ -348,7 +352,7 @@ describe('SocketContext', () => {
 
       act(() => {
         const callback = vi.mocked(socketService.onRoomJoined).mock.calls[0][0];
-        callback(mockRoom);
+        callback({ room: mockRoom, currentPlayerId: 'player1' });
       });
 
       // Then remove one

@@ -164,7 +164,7 @@ describe('WaitingRoom', () => {
       expect(mockStartGame).toHaveBeenCalled();
     });
 
-    it('should disable start button with only one player', () => {
+    it('should enable start button with one player (single-player mode)', () => {
       const mockSocketSinglePlayer = {
         ...defaultMockSocket,
         currentRoom: {
@@ -182,24 +182,20 @@ describe('WaitingRoom', () => {
       
       render(<WaitingRoom />);
       const startButton = screen.getByRole('button', { name: /Start Game/i });
-      expect(startButton).toBeDisabled();
+      expect(startButton).not.toBeDisabled();
     });
 
-    it('should show minimum players message when insufficient players', () => {
-      const mockSocketSinglePlayer = {
+    it('should show minimum players message when no players', () => {
+      const mockSocketNoPlayers = {
         ...defaultMockSocket,
         currentRoom: {
           ...mockRoom,
-          players: [
-            { id: 'player1', name: 'Alice', score: 0, isConnected: true, hasAnswered: false, isHost: true }
-          ]
+          players: []
         },
-        players: [
-          { id: 'player1', name: 'Alice', score: 0, isConnected: true, hasAnswered: false, isHost: true }
-        ]
+        players: []
       };
 
-      vi.mocked(useSocket).mockReturnValue(mockSocketSinglePlayer);
+      vi.mocked(useSocket).mockReturnValue(mockSocketNoPlayers);
       
       render(<WaitingRoom />);
       expect(screen.getByText(/Need at least 1 players to start/i)).toBeInTheDocument();
