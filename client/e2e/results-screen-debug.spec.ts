@@ -6,6 +6,9 @@ test.describe('Results Screen Debug', () => {
     
     // Quick setup
     await page.goto('/');
+    
+    // Wait for connection to be established
+    await page.waitForTimeout(3000);
     await page.getByRole('button', { name: /Create New Room/i }).click();
     await page.getByPlaceholder(/Enter your name/i).fill('ResultsTest');
     await page.getByRole('button', { name: /Create/i }).last().click();

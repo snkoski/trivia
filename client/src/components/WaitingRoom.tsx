@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSocket } from '../contexts/SocketContext';
-import { Player } from '@trivia/shared';
+import type { Player } from '@trivia/shared';
 
 interface WaitingRoomProps {
   onGameStart?: () => void;

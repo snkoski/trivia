@@ -277,13 +277,24 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
           Correct Answer: {correctOptionText}
         </div>
 
-        {isHost && (
+        {isHost && questionNumber < totalQuestions && (
           <div className="host-controls">
             <button
               onClick={handleNextQuestion}
               className="next-question-button primary-button"
             >
               Next Question
+            </button>
+          </div>
+        )}
+        
+        {isHost && questionNumber >= totalQuestions && (
+          <div className="host-controls">
+            <button
+              onClick={handleNextQuestion}
+              className="next-question-button primary-button"
+            >
+              End Game
             </button>
           </div>
         )}

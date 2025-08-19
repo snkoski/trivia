@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { 
+import type { 
   ClientToServerEvents, 
   ServerToClientEvents,
   Room,

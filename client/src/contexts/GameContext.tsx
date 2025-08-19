@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
-import { Player } from '@trivia/shared';
+import type { Player } from '@trivia/shared';
 
 interface Winner {
   id: string;

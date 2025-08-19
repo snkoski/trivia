@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { socketService } from '../services/socket';
 import type { TypedSocket } from '../services/socket';
-import { Room, Player, ClientQuestion, GameState } from '@trivia/shared';
+import type { Room, Player, ClientQuestion, GameState } from '@trivia/shared';
 
 interface SocketContextType {
   // Connection
@@ -141,6 +141,17 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       setCorrectAnswer(null);
       // Reset all players' hasAnswered status for the new question
       setPlayers(prev => prev.map(p => ({ ...p, hasAnswered: false })));
+      
+      // Update the room's question index when we get a new question
+      setCurrentRoom(prev => {
+        if (prev) {
+          return {
+            ...prev,
+            currentQuestionIndex: (prev.currentQuestionIndex || 0) + 1
+          };
+        }
+        return prev;
+      });
     });
 
     socketService.onPlayerAnswered((playerId) => {
