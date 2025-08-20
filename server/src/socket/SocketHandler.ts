@@ -265,10 +265,12 @@ export class SocketHandler {
           room.state = 'finished';
           
           // Submit scores to global leaderboard
-          const playerScores = room.players.map(player => ({
+          // Get scores from the game engine, not from room.players
+          const gameScores = gameEngine.getScores();
+          const playerScores = gameEngine.getPlayers().map(player => ({
             playerId: player.id,
             playerName: player.name,
-            score: player.score
+            score: gameScores[player.id] || 0
           }));
           
           const gameId = globalLeaderboard.submitGameResults(
