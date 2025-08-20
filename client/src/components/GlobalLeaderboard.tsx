@@ -64,12 +64,12 @@ export const GlobalLeaderboard: React.FC<GlobalLeaderboardProps> = ({ onClose })
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const getRankDisplay = (index: number): string => {
+  const getRankDisplay = (index: number): React.ReactNode => {
     switch (index) {
-      case 0: return '🥇';
-      case 1: return '🥈';
-      case 2: return '🥉';
-      default: return `#${index + 1}`;
+      case 0: return <span className='trophy gold'>🥇</span>;
+      case 1: return <span className='trophy silver'>🥈</span>;
+      case 2: return <span className='trophy bronze'>🥉</span>;
+      default: return <span className='rank-number'>#{index + 1}</span>;
     }
   };
 
@@ -117,9 +117,14 @@ export const GlobalLeaderboard: React.FC<GlobalLeaderboardProps> = ({ onClose })
     <div className='global-leaderboard-overlay'>
       <div className='global-leaderboard-modal'>
         <div className='leaderboard-header'>
+          <div className='header-decoration'>
+            <div className='star star-1'>⭐</div>
+            <div className='star star-2'>✨</div>
+            <div className='star star-3'>🌟</div>
+          </div>
           <h2>🏆 Global Leaderboard</h2>
           <p className='game-info'>
-            Music Trivia • {leaderboardData.questionCount} Questions
+            🎵 Music Trivia • {leaderboardData.questionCount} Questions • 🎮 Cross-Room Competition
           </p>
           {onClose && (
             <button onClick={onClose} className='close-button-x' aria-label='Close'>
@@ -131,9 +136,14 @@ export const GlobalLeaderboard: React.FC<GlobalLeaderboardProps> = ({ onClose })
         <div className='leaderboard-content'>
           {leaderboardData.leaderboard.length === 0 ? (
             <div className='empty-state'>
-              <div className='empty-icon'>🎮</div>
-              <h3>No Scores Yet</h3>
-              <p>Be the first to complete a game and set a high score!</p>
+              <div className='empty-icon'>🏆</div>
+              <h3>🌟 No Champions Yet! 🌟</h3>
+              <p>🎯 Be the first to complete a game and claim your spot on the global leaderboard!</p>
+              <div className='empty-encouragement'>
+                <span className='sparkle'>✨</span>
+                <span>Ready to make history?</span>
+                <span className='sparkle'>✨</span>
+              </div>
             </div>
           ) : (
             <>
@@ -141,8 +151,8 @@ export const GlobalLeaderboard: React.FC<GlobalLeaderboardProps> = ({ onClose })
                 <span className='total-players'>
                   {leaderboardData.total} total score{leaderboardData.total !== 1 ? 's' : ''}
                 </span>
-                <button onClick={fetchLeaderboard} className='refresh-button' title='Refresh'>
-                  🔄
+                <button onClick={fetchLeaderboard} className='refresh-button' title='Refresh leaderboard'>
+                  <span className='refresh-icon'>🔄</span>
                 </button>
               </div>
 
@@ -160,24 +170,34 @@ export const GlobalLeaderboard: React.FC<GlobalLeaderboardProps> = ({ onClose })
                   </thead>
                   <tbody>
                     {leaderboardData.leaderboard.map((entry, index) => (
-                      <tr key={`${entry.playerId}-${entry.timestamp}`} className={index < 3 ? 'top-three' : ''}>
+                      <tr 
+                        key={`${entry.playerId}-${entry.timestamp}`} 
+                        className={`leaderboard-row ${index < 3 ? 'top-three' : ''}`}
+                        style={{ animationDelay: `${index * 0.05}s` }}
+                      >
                         <td className='rank-cell'>
-                          <span className='rank'>{getRankDisplay(index)}</span>
+                          <div className='rank'>{getRankDisplay(index)}</div>
                         </td>
                         <td className='player-cell'>
-                          <span className='player-name'>{entry.playerName}</span>
+                          <div className='player-info'>
+                            <span className='player-name'>{entry.playerName}</span>
+                            {index < 3 && <span className='crown'>👑</span>}
+                          </div>
                         </td>
                         <td className='score-cell'>
-                          <span className='score'>{entry.score}</span>
+                          <div className='score-wrapper'>
+                            <span className='score'>{entry.score.toLocaleString()}</span>
+                            <span className='score-label'>pts</span>
+                          </div>
                         </td>
                         <td className='room-cell'>
                           <span className='room-code'>{entry.roomCode}</span>
                         </td>
                         <td className='duration-cell'>
-                          <span className='duration'>{formatDuration(entry.gameDuration)}</span>
+                          <span className='duration'>⏱️ {formatDuration(entry.gameDuration)}</span>
                         </td>
                         <td className='date-cell'>
-                          <span className='date'>{formatTimestamp(entry.timestamp)}</span>
+                          <span className='date'>📅 {formatTimestamp(entry.timestamp)}</span>
                         </td>
                       </tr>
                     ))}
@@ -195,7 +215,7 @@ export const GlobalLeaderboard: React.FC<GlobalLeaderboardProps> = ({ onClose })
             </button>
           )}
           <p className='footer-text'>
-            Scores from all rooms playing the same game
+            🌍 Scores from all rooms • 🎮 Real-time competition • 🏆 Glory awaits
           </p>
         </div>
       </div>
