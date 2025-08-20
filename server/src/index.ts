@@ -5,6 +5,8 @@ import cors from 'cors';
 import path from 'path';
 import { RoomManager } from './services/RoomManager';
 import { SocketHandler } from './socket/SocketHandler';
+import { globalLeaderboard } from './services/GlobalLeaderboard';
+import { mockQuestions } from './data/questions';
 import { ClientToServerEvents, ServerToClientEvents } from '../../packages/shared/dist';
 
 const app = express();
@@ -69,6 +71,66 @@ app.get('/api/rooms/:code', (req, res) => {
   res.json(room);
 });
 
+// Global Leaderboard API Endpoints
+
+// Get global leaderboard for current question set
+app.get('/api/leaderboard', (req, res) => {
+  const limit = parseInt(req.query.limit as string) || 10;
+  const leaderboard = globalLeaderboard.getLeaderboardForQuestions(mockQuestions, limit);
+  const gameId = globalLeaderboard.generateGameId(mockQuestions);
+  
+  res.json({
+    gameId,
+    questionCount: mockQuestions.length,
+    leaderboard,
+    total: leaderboard.length
+  });
+});
+
+// Get all available games
+app.get('/api/leaderboard/games', (req, res) => {
+  const games = globalLeaderboard.getAllGames();
+  res.json({ games });
+});
+
+// Get leaderboard for specific game
+app.get('/api/leaderboard/games/:gameId', (req, res) => {
+  const { gameId } = req.params;
+  const limit = parseInt(req.query.limit as string) || 10;
+  const leaderboard = globalLeaderboard.getLeaderboard(gameId, limit);
+  
+  if (leaderboard.length === 0) {
+    return res.status(404).json({ error: 'Game not found or no scores available' });
+  }
+  
+  res.json({
+    gameId,
+    leaderboard,
+    total: leaderboard.length
+  });
+});
+
+// Get player's rank and best score for current game
+app.get('/api/leaderboard/player/:playerId', (req, res) => {
+  const { playerId } = req.params;
+  const gameId = globalLeaderboard.generateGameId(mockQuestions);
+  
+  const bestScore = globalLeaderboard.getPlayerBestScore(gameId, playerId);
+  const rank = globalLeaderboard.getPlayerRank(gameId, playerId);
+  
+  if (!bestScore) {
+    return res.status(404).json({ error: 'Player not found in leaderboard' });
+  }
+  
+  res.json({
+    gameId,
+    playerId,
+    bestScore,
+    rank,
+    totalPlayers: globalLeaderboard.getLeaderboard(gameId, 1000).length
+  });
+});
+
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Server error:', err);
@@ -103,6 +165,8 @@ CORS Origin: ${process.env.CLIENT_URL || 'http://localhost:5173'}
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('SIGTERM received, closing server...');
+  console.log('Saving leaderboard data...');
+  globalLeaderboard.forceSave();
   httpServer.close(() => {
     console.log('Server closed');
     process.exit(0);
@@ -111,6 +175,8 @@ process.on('SIGTERM', () => {
 
 process.on('SIGINT', () => {
   console.log('SIGINT received, closing server...');
+  console.log('Saving leaderboard data...');
+  globalLeaderboard.forceSave();
   httpServer.close(() => {
     console.log('Server closed');
     process.exit(0);

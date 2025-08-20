@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../contexts/SocketContext';
+import { GlobalLeaderboard } from './GlobalLeaderboard';
 
 interface LobbyScreenProps {
   onRoomJoined?: () => void;
@@ -22,6 +23,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
   const [playerName, setPlayerName] = useState('');
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   // Handle successful room creation/joining
   useEffect(() => {
@@ -135,7 +137,23 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
             Join Existing Room
           </button>
         </div>
+        
+        <div className="option-card">
+          <h2>🏆 Global Leaderboard</h2>
+          <p>View top scores from all players</p>
+          <button 
+            onClick={() => setShowLeaderboard(true)}
+            disabled={!isConnected}
+            className="secondary-button"
+          >
+            View Leaderboard
+          </button>
+        </div>
       </div>
+      
+      {showLeaderboard && (
+        <GlobalLeaderboard onClose={() => setShowLeaderboard(false)} />
+      )}
     </div>
   );
 

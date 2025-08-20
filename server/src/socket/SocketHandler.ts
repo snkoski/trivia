@@ -1,6 +1,7 @@
 import { Server as SocketIOServer, Socket } from 'socket.io';
 import { RoomManager } from '../services/RoomManager';
 import { GameEngine } from '../services/GameEngine';
+import { globalLeaderboard } from '../services/GlobalLeaderboard';
 import { ClientToServerEvents, ServerToClientEvents, Question } from '../../../packages/shared/dist';
 import { mockQuestions } from '../data/questions';
 
@@ -263,12 +264,26 @@ export class SocketHandler {
           const endResult = gameEngine.endGame();
           room.state = 'finished';
           
+          // Submit scores to global leaderboard
+          const playerScores = room.players.map(player => ({
+            playerId: player.id,
+            playerName: player.name,
+            score: player.score
+          }));
+          
+          const gameId = globalLeaderboard.submitGameResults(
+            mockQuestions,
+            socket.data.currentRoom,
+            playerScores,
+            endResult.duration
+          );
+          
+          console.log(`Game ended in room ${socket.data.currentRoom}, scores submitted to global leaderboard ${gameId}`);
+          
           this.io.to(socket.data.currentRoom).emit('game-ended', endResult.finalScores!);
           
           // Clean up game engine
           this.gameEngines.delete(socket.data.currentRoom);
-          
-          console.log(`Game ended in room ${socket.data.currentRoom}`);
         } else {
           // Send next question
           this.io.to(socket.data.currentRoom).emit('next-question', result.question!);

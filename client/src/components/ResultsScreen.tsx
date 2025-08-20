@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSocket } from '../contexts/SocketContext';
 import { useGame } from '../contexts/GameContext';
+import { GlobalLeaderboard } from './GlobalLeaderboard';
 
 interface ResultsScreenProps {
   onNewGame?: () => void;
@@ -8,6 +9,7 @@ interface ResultsScreenProps {
 }
 
 export const ResultsScreen: React.FC<ResultsScreenProps> = ({ onNewGame, onLeaveRoom }) => {
+  const [showGlobalLeaderboard, setShowGlobalLeaderboard] = useState(false);
   const { 
     isConnected,
     error,
@@ -187,6 +189,12 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({ onNewGame, onLeave
 
   const renderActions = () => (
     <div className="game-actions">
+      <button
+        onClick={() => setShowGlobalLeaderboard(true)}
+        className="global-leaderboard-button secondary-button"
+      >
+        🏆 Global Leaderboard
+      </button>
       {isHost && (
         <button
           onClick={handleNewGame}
@@ -213,6 +221,10 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({ onNewGame, onLeave
       {renderLeaderboard()}
       {renderGameStats()}
       {renderActions()}
+      
+      {showGlobalLeaderboard && (
+        <GlobalLeaderboard onClose={() => setShowGlobalLeaderboard(false)} />
+      )}
     </div>
   );
 };

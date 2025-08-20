@@ -35,3 +35,7 @@ dist-ssr
 
 # Keep the README in audio folder
 !client/public/audio/README.md
+
+# Leaderboard data files
+data/
+*.json
