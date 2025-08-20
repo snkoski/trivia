@@ -229,8 +229,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
               disabled={hasAnswered || showResults}
               aria-label={`Answer option ${index + 1}: ${option}`}
             >
-              <span className="option-letter">{String.fromCharCode(65 + index)}</span>
-              <span className="option-text">{option}</span>
+              {option}
             </button>
           );
         })}
