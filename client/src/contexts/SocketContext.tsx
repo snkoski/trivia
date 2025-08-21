@@ -166,9 +166,19 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       setCorrectAnswer(answer);
     });
 
-    socketService.onGameEnded((finalScores) => {
+    socketService.onGameEnded((gameEndData) => {
       setGameState('finished');
-      setScores(finalScores);
+      
+      // Handle both old format (just scores) and new format (object with scores and players)
+      if (gameEndData && typeof gameEndData === 'object' && 'finalScores' in gameEndData) {
+        // New format: { finalScores: Record<string, number>, players: Player[] }
+        setScores(gameEndData.finalScores);
+        setPlayers(gameEndData.players);
+      } else {
+        // Old format: just Record<string, number>
+        setScores(gameEndData as Record<string, number>);
+        // Keep existing players array as is
+      }
     });
 
     socketService.onError((message) => {

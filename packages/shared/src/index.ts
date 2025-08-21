@@ -74,7 +74,7 @@ export interface ServerToClientEvents {
   'next-question': (question: ClientQuestion) => void;
   'player-answered': (playerId: string) => void;
   'round-results': (scores: Record<string, number>, correctAnswer: number) => void;
-  'game-ended': (finalScores: Record<string, number>) => void;
+  'game-ended': (gameEndData: { finalScores: Record<string, number>; players: Player[] }) => void;
   'error': (message: string) => void;
   
   // Global lobby events

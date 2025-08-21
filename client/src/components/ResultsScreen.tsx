@@ -149,7 +149,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({ onNewGame, onLeave
                 <span className="rank">{position}{getOrdinalSuffix(position)}</span>
               </div>
               <div className="player-info">
-                <span className="player-name">{player.playerName}</span>
+                <span className="player-name">{player.name}</span>
               </div>
               <div className="player-score">
                 <span className="score">{player.score}</span>

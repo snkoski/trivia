@@ -165,7 +165,7 @@ class SocketService {
     this.socket.on('round-results', callback);
   }
 
-  onGameEnded(callback: (finalScores: Record<string, number>) => void): void {
+  onGameEnded(callback: (gameEndData: any) => void): void {
     if (!this.socket) throw new Error('Socket not connected');
     this.socket.on('game-ended', callback);
   }

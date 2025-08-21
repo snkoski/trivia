@@ -302,6 +302,8 @@ export class SocketHandler {
             score: gameScores[player.id] || 0
           }));
           
+          console.log('🎯 Room game submitting to leaderboard:', playerScores);
+          
           const gameId = globalLeaderboard.submitGameResults(
             mockQuestions,
             socket.data.currentRoom,
@@ -311,7 +313,24 @@ export class SocketHandler {
           
           console.log(`Game ended in room ${socket.data.currentRoom}, scores submitted to global leaderboard ${gameId}`);
           
-          this.io.to(socket.data.currentRoom).emit('game-ended', endResult.finalScores!);
+          // Send both scores and player info for the results screen
+          const playersWithScores = gameEngine.getPlayers().map(player => ({
+            id: player.id,
+            name: player.name,
+            score: gameScores[player.id] || 0,
+            isConnected: player.isConnected,
+            hasAnswered: player.hasAnswered,
+            isHost: player.isHost
+          }));
+          
+          const gameEndData = {
+            finalScores: endResult.finalScores!,
+            players: playersWithScores
+          };
+          
+          console.log('🎯 Sending game-ended event with data:', gameEndData);
+          
+          this.io.to(socket.data.currentRoom).emit('game-ended', gameEndData);
           
           // Clean up game engine
           this.gameEngines.delete(socket.data.currentRoom);

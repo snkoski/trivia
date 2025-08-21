@@ -512,7 +512,13 @@ describe('SocketContext', () => {
     });
 
     it('should handle game-ended event', async () => {
-      const finalScores = { player1: 300, player2: 250 };
+      const gameEndData = {
+        finalScores: { player1: 300, player2: 250 },
+        players: [
+          { id: 'player1', name: 'Alice', score: 300, isConnected: true, hasAnswered: true, isHost: true },
+          { id: 'player2', name: 'Bob', score: 250, isConnected: true, hasAnswered: true, isHost: false }
+        ]
+      };
 
       const { result } = renderHook(() => useSocket(), {
         wrapper: ({ children }) => <SocketProvider>{children}</SocketProvider>
@@ -520,11 +526,12 @@ describe('SocketContext', () => {
 
       act(() => {
         const callback = vi.mocked(socketService.onGameEnded).mock.calls[0][0];
-        callback(finalScores);
+        callback(gameEndData);
       });
 
       expect(result.current.gameState).toBe('finished');
-      expect(result.current.scores).toEqual(finalScores);
+      expect(result.current.scores).toEqual(gameEndData.finalScores);
+      expect(result.current.players).toEqual(gameEndData.players);
     });
 
     it('should handle error event', async () => {

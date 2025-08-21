@@ -303,6 +303,10 @@
   position: relative;
 }
 
+/* 
+  DISABLED: This ::before pseudo-element was causing table column misalignment
+  The absolute positioning interfered with the table layout for top-three rows
+  
 .leaderboard-table tbody tr.top-three::before {
   content: '';
   position: absolute;
@@ -313,6 +317,7 @@
   background: linear-gradient(90deg, rgba(255, 215, 0, 0.1) 0%, transparent 50%);
   pointer-events: none;
 }
+*/
 
 .leaderboard-table tbody tr.top-three:hover {
   background: linear-gradient(90deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 248, 220, 0.9) 50%, rgba(248, 249, 250, 1) 100%);
@@ -660,6 +665,10 @@
     display: none;
   }
   
+  .leaderboard-table th:nth-child(6) {
+    display: none;
+  }
+  
   .leaderboard-footer {
     flex-direction: column;
     gap: 12px;
@@ -669,6 +678,10 @@
 
 @media (max-width: 480px) {
   .duration-cell {
+    display: none;
+  }
+  
+  .leaderboard-table th:nth-child(5) {
     display: none;
   }
   
