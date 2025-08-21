@@ -13,8 +13,12 @@ const app = express();
 const httpServer = createServer(app);
 
 // Configure CORS for Express
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? ['https://trivia-production-5dc4.up.railway.app']
+  : ['http://localhost:5173', 'http://localhost:3001'];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: allowedOrigins,
   credentials: true
 }));
 
@@ -27,7 +31,7 @@ app.use('/audio', express.static(path.join(__dirname, '../../client/public/audio
 // Configure Socket.IO with CORS
 const io = new SocketIOServer<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true
   },
