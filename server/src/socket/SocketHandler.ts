@@ -2,6 +2,7 @@ import { Server as SocketIOServer, Socket } from 'socket.io';
 import { RoomManager } from '../services/RoomManager';
 import { GameEngine } from '../services/GameEngine';
 import { globalLeaderboard } from '../services/GlobalLeaderboard';
+import { globalLobby } from '../services/GlobalLobby';
 import { ClientToServerEvents, ServerToClientEvents, Question } from '../../../packages/shared/dist';
 import { mockQuestions } from '../data/questions';
 
@@ -10,6 +11,7 @@ type SocketWithData = Socket<ClientToServerEvents, ServerToClientEvents> & {
     playerId: string;
     playerName: string;
     currentRoom: string | null;
+    inLobby: boolean;
   };
 };
 
@@ -36,7 +38,8 @@ export class SocketHandler {
       socketWithData.data = {
         playerId: this.generatePlayerId(),
         playerName: '',
-        currentRoom: null
+        currentRoom: null,
+        inLobby: false
       };
 
       this.socketPlayerMap.set(socket.id, socketWithData.data.playerId);
@@ -71,6 +74,19 @@ export class SocketHandler {
       // Handle next question
       socket.on('request-next-question', () => {
         this.handleNextQuestion(socketWithData);
+      });
+
+      // Handle lobby events
+      socket.on('join-lobby', (playerName: string) => {
+        this.handleJoinLobby(socketWithData, playerName);
+      });
+
+      socket.on('leave-lobby', () => {
+        this.handleLeaveLobby(socketWithData);
+      });
+
+      socket.on('send-lobby-message', (message: string) => {
+        this.handleLobbyChatMessage(socketWithData, message);
       });
 
       // Handle disconnect
@@ -308,9 +324,95 @@ export class SocketHandler {
         this.handleLeaveRoom(socket);
       }
 
+      // Handle leaving lobby on disconnect
+      if (socket.data.inLobby) {
+        this.handleLeaveLobby(socket);
+      }
+
       this.socketPlayerMap.delete(socket.id);
     } catch (error) {
       console.error('Disconnect error:', error);
+    }
+  }
+
+  // Lobby handlers
+  private handleJoinLobby(socket: SocketWithData, playerName: string) {
+    try {
+      socket.data.playerName = playerName;
+      socket.data.inLobby = true;
+      
+      const player = globalLobby.addPlayer(socket.data.playerId, playerName);
+      
+      // Join lobby socket room
+      socket.join('global-lobby');
+      
+      // Send chat history to new player
+      const chatHistory = globalLobby.getRecentChatHistory(50);
+      socket.emit('lobby-chat-history', chatHistory);
+      
+      // Send current players list to new player
+      const allPlayers = globalLobby.getAllPlayers();
+      socket.emit('lobby-players-updated', allPlayers);
+      
+      // Notify other lobby players
+      socket.to('global-lobby').emit('lobby-player-joined', player);
+      socket.to('global-lobby').emit('lobby-players-updated', allPlayers);
+      
+      console.log(`${playerName} joined global lobby`);
+    } catch (error) {
+      socket.emit('error', 'Failed to join lobby');
+      console.error('Join lobby error:', error);
+    }
+  }
+
+  private handleLeaveLobby(socket: SocketWithData) {
+    try {
+      if (!socket.data.inLobby) return;
+      
+      const removedPlayer = globalLobby.removePlayer(socket.data.playerId);
+      
+      if (removedPlayer) {
+        socket.leave('global-lobby');
+        socket.data.inLobby = false;
+        
+        // Notify remaining lobby players
+        const remainingPlayers = globalLobby.getAllPlayers();
+        socket.to('global-lobby').emit('lobby-player-left', socket.data.playerId);
+        socket.to('global-lobby').emit('lobby-players-updated', remainingPlayers);
+        
+        console.log(`${removedPlayer.name} left global lobby`);
+      }
+    } catch (error) {
+      console.error('Leave lobby error:', error);
+    }
+  }
+
+  private handleLobbyChatMessage(socket: SocketWithData, messageText: string) {
+    try {
+      if (!socket.data.inLobby) {
+        socket.emit('error', 'Not in lobby');
+        return;
+      }
+
+      if (!messageText.trim()) {
+        socket.emit('error', 'Message cannot be empty');
+        return;
+      }
+
+      if (messageText.length > 500) {
+        socket.emit('error', 'Message too long (max 500 characters)');
+        return;
+      }
+      
+      const message = globalLobby.addMessage(socket.data.playerId, messageText);
+      
+      // Broadcast message to all lobby players
+      this.io.to('global-lobby').emit('lobby-chat-message', message);
+      
+      console.log(`Lobby chat from ${socket.data.playerName}: ${messageText}`);
+    } catch (error) {
+      socket.emit('error', 'Failed to send message');
+      console.error('Lobby chat error:', error);
     }
   }
 

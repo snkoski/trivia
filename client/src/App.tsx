@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import { SocketProvider } from './contexts/SocketContext';
 import { GameProvider } from './contexts/GameContext';
+import { UserProvider } from './contexts/UserContext';
+import { LobbyProvider } from './contexts/LobbyContext';
 import { LobbyScreen } from './components/LobbyScreen';
 import { WaitingRoom } from './components/WaitingRoom';
 import { GameScreen } from './components/GameScreen';
@@ -96,11 +98,15 @@ const AppContent: React.FC = () => {
 
 function App() {
   return (
-    <SocketProvider>
-      <GameProvider>
-        <AppContent />
-      </GameProvider>
-    </SocketProvider>
+    <UserProvider>
+      <SocketProvider>
+        <LobbyProvider>
+          <GameProvider>
+            <AppContent />
+          </GameProvider>
+        </LobbyProvider>
+      </SocketProvider>
+    </UserProvider>
   );
 }
 

@@ -24,6 +24,179 @@
   text-align: center;
 }
 
+/* Username display styles */
+.username-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #fff;
+}
+
+.change-username-button {
+  background: none;
+  border: none;
+  color: #4caf50;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.change-username-button:hover {
+  background: rgba(76, 175, 80, 0.1);
+}
+
+/* Global Lobby Styles */
+.lobby-main {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lobby-header {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.lobby-header h1 {
+  margin: 0 0 15px 0;
+  font-size: 2rem;
+  color: #fff;
+}
+
+.lobby-content {
+  display: grid;
+  grid-template-columns: 250px 1fr 300px;
+  gap: 20px;
+  height: 500px;
+  min-height: 500px;
+}
+
+.lobby-sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
+.lobby-center {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lobby-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.lobby-stats {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-top: auto;
+}
+
+.stat-item {
+  text-align: center;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  min-width: 120px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #4caf50;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #b0b0b0;
+}
+
+.lobby-chat-container {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .lobby-content {
+    grid-template-columns: 200px 1fr 250px;
+  }
+}
+
+@media (max-width: 992px) {
+  .lobby-content {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 300px;
+    height: auto;
+  }
+  
+  .lobby-sidebar {
+    order: 1;
+  }
+  
+  .lobby-center {
+    order: 2;
+  }
+  
+  .lobby-chat-container {
+    order: 3;
+    height: 300px;
+  }
+  
+  .lobby-options {
+    grid-template-columns: 1fr;
+  }
+  
+  .lobby-stats {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .game-container {
+    padding: 20px;
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+  
+  .lobby-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .lobby-content {
+    gap: 15px;
+    height: auto;
+  }
+  
+  .stat-item {
+    min-width: 100px;
+    padding: 12px;
+  }
+  
+  .stat-value {
+    font-size: 1.2rem;
+  }
+}
+
 .start-screen,
 .end-screen {
   text-align: center;

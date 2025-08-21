@@ -4,7 +4,9 @@ import type {
   ServerToClientEvents,
   Room,
   Player,
-  ClientQuestion
+  ClientQuestion,
+  LobbyPlayer,
+  ChatMessage
 } from '@trivia/shared';
 
 // Create typed socket instance
@@ -90,6 +92,22 @@ class SocketService {
     this.socket.emit('request-next-question');
   }
 
+  // Lobby operations
+  joinLobby(playerName: string): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.emit('join-lobby', playerName);
+  }
+
+  leaveLobby(): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.emit('leave-lobby');
+  }
+
+  sendLobbyMessage(message: string): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.emit('send-lobby-message', message);
+  }
+
   // Event listeners - to be used by React components
   onRoomCreated(callback: (roomCode: string) => void): void {
     if (!this.socket) throw new Error('Socket not connected');
@@ -139,6 +157,78 @@ class SocketService {
   onError(callback: (message: string) => void): void {
     if (!this.socket) throw new Error('Socket not connected');
     this.socket.on('error', callback);
+  }
+
+  // Lobby event listeners
+  onLobbyPlayersUpdated(callback: (players: LobbyPlayer[]) => void): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.on('lobby-players-updated', callback);
+  }
+
+  onLobbyPlayerJoined(callback: (player: LobbyPlayer) => void): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.on('lobby-player-joined', callback);
+  }
+
+  onLobbyPlayerLeft(callback: (playerId: string) => void): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.on('lobby-player-left', callback);
+  }
+
+  onLobbyChatMessage(callback: (message: ChatMessage) => void): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.on('lobby-chat-message', callback);
+  }
+
+  onLobbyChatHistory(callback: (messages: ChatMessage[]) => void): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.on('lobby-chat-history', callback);
+  }
+
+  // Remove specific lobby listeners
+  offLobbyPlayersUpdated(callback?: (players: LobbyPlayer[]) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('lobby-players-updated', callback);
+    } else {
+      this.socket.off('lobby-players-updated');
+    }
+  }
+
+  offLobbyPlayerJoined(callback?: (player: LobbyPlayer) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('lobby-player-joined', callback);
+    } else {
+      this.socket.off('lobby-player-joined');
+    }
+  }
+
+  offLobbyPlayerLeft(callback?: (playerId: string) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('lobby-player-left', callback);
+    } else {
+      this.socket.off('lobby-player-left');
+    }
+  }
+
+  offLobbyChatMessage(callback?: (message: ChatMessage) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('lobby-chat-message', callback);
+    } else {
+      this.socket.off('lobby-chat-message');
+    }
+  }
+
+  offLobbyChatHistory(callback?: (messages: ChatMessage[]) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('lobby-chat-history', callback);
+    } else {
+      this.socket.off('lobby-chat-history');
+    }
   }
 
   // Clean up listeners
