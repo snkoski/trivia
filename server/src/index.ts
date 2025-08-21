@@ -23,6 +23,20 @@ app.use(express.json());
 // Serve static audio files from client's public directory
 app.use('/audio', express.static(path.join(__dirname, '../../client/public/audio')));
 
+// Serve client build files in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../../client/dist')));
+  
+  // Handle client-side routing - serve index.html for non-API routes
+  app.get('*', (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api/') || req.path.startsWith('/health') || req.path.startsWith('/audio/')) {
+      return res.status(404).json({ error: 'Route not found' });
+    }
+    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+  });
+}
+
 // Configure Socket.IO with CORS
 const io = new SocketIOServer<ClientToServerEvents, ServerToClientEvents>(httpServer, {
   cors: {

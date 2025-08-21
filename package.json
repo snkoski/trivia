@@ -13,7 +13,7 @@
     "dev": "concurrently \"yarn workspace client dev\" \"yarn workspace server dev\"",
     "dev:client": "yarn workspace client dev",
     "dev:server": "yarn workspace server dev",
-    "build": "yarn workspace @trivia/shared build && yarn workspace server build",
+    "build": "yarn workspace @trivia/shared build && yarn workspace client build && yarn workspace server build",
     "start": "yarn workspace server start",
     "test": "yarn workspaces run test",
     "test:watch": "yarn workspace server test:watch",
