@@ -413,6 +413,26 @@ html, body {
   animation: shake 0.5s ease;
 }
 
+.answer-button.selected {
+  background: linear-gradient(135deg, #E55A7F 0%, #E66946 100%) !important;
+  border-color: #E55A7F !important;
+  color: white !important;
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(229, 90, 127, 0.4) !important;
+}
+
+.answer-button.selected.correct {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+  border-color: #38ef7d !important;
+  animation: correctPulse 0.6s ease;
+}
+
+.answer-button.selected.incorrect {
+  background: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%) !important;
+  border-color: #ff6a00 !important;
+  animation: shake 0.5s ease;
+}
+
 .next-btn {
   width: 100%;
   margin-top: 20px;

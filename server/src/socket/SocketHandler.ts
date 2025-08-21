@@ -471,7 +471,7 @@ export class SocketHandler {
       }
 
       // Convert lobby players to game players
-      const gamePlayers = newLobbyGame.players.map(lobbyPlayer => ({
+      const gamePlayers = newLobbyGame.players.map((lobbyPlayer: any) => ({
         id: lobbyPlayer.id,
         name: lobbyPlayer.name,
         score: 0,

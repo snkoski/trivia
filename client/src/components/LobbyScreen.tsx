@@ -33,6 +33,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
     gameScores, 
     correctAnswer, 
     hasAnswered, 
+    selectedAnswer,
     countdown,
     startLobbyGame, 
     submitLobbyAnswer, 
@@ -207,19 +208,38 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
               <audio controls src={currentQuestion.audioUrl} />
             )}
             <div className="answer-options">
-              {currentQuestion.options.map((option, index) => (
-                <button
-                  key={index}
-                  onClick={() => submitLobbyAnswer(index)}
-                  disabled={hasAnswered}
-                  className={`answer-button ${hasAnswered ? 'answered' : ''} ${
-                    correctAnswer === index ? 'correct' : 
-                    hasAnswered && correctAnswer !== null && correctAnswer !== index ? 'incorrect' : ''
-                  }`}
-                >
-                  {option}
-                </button>
-              ))}
+              {currentQuestion.options.map((option, index) => {
+                let buttonClass = 'answer-button';
+                
+                if (hasAnswered) {
+                  buttonClass += ' answered';
+                  
+                  // Show which answer the user selected
+                  if (selectedAnswer === index) {
+                    buttonClass += ' selected';
+                  }
+                  
+                  // Show correct/incorrect after round results
+                  if (correctAnswer !== null) {
+                    if (correctAnswer === index) {
+                      buttonClass += ' correct';
+                    } else if (selectedAnswer === index && correctAnswer !== index) {
+                      buttonClass += ' incorrect';
+                    }
+                  }
+                }
+                
+                return (
+                  <button
+                    key={index}
+                    onClick={() => submitLobbyAnswer(index)}
+                    disabled={hasAnswered}
+                    className={buttonClass}
+                  >
+                    {option}
+                  </button>
+                );
+              })}
             </div>
             {hasAnswered && (
               <div className="waiting-message">

@@ -16,6 +16,7 @@ interface LobbyContextType {
   gameScores: Record<string, number>;
   correctAnswer: number | null;
   hasAnswered: boolean;
+  selectedAnswer: number | null;
   countdown: number | null;
   
   // Actions
@@ -60,6 +61,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
   const [gameScores, setGameScores] = useState<Record<string, number>>({});
   const [correctAnswer, setCorrectAnswer] = useState<number | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
 
   // Setup socket listeners only when connected
@@ -105,6 +107,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
       setGameState('playing');
       setCurrentQuestion(question);
       setHasAnswered(false);
+      setSelectedAnswer(null);
       setCorrectAnswer(null);
       setCountdown(null);
     };
@@ -112,6 +115,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     const handleLobbyGameNextQuestion = (question: ClientQuestion) => {
       setCurrentQuestion(question);
       setHasAnswered(false);
+      setSelectedAnswer(null);
       setCorrectAnswer(null);
     };
 
@@ -244,6 +248,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     try {
       socketService.submitLobbyAnswer(answerIndex);
       setHasAnswered(true);
+      setSelectedAnswer(answerIndex);
     } catch (error) {
       console.error('Error submitting lobby answer:', error);
     }
@@ -265,6 +270,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     setGameScores({});
     setCorrectAnswer(null);
     setHasAnswered(false);
+    setSelectedAnswer(null);
     setCountdown(null);
   }, []);
 
@@ -277,6 +283,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     gameScores,
     correctAnswer,
     hasAnswered,
+    selectedAnswer,
     countdown,
     joinLobby,
     leaveLobby,
