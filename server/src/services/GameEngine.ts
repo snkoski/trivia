@@ -47,6 +47,8 @@ export class GameEngine {
   private gameFinished: boolean;
   private gameStartTime: number | null;
   private gameEndTime: number | null;
+  private questionStartTime: number | null;
+  private readonly QUESTION_TIME_LIMIT = 35000; // 35 seconds in milliseconds
 
   constructor(questions: Question[], players: Player[]) {
     this.questions = questions;
@@ -56,6 +58,7 @@ export class GameEngine {
     this.gameFinished = false;
     this.gameStartTime = null;
     this.gameEndTime = null;
+    this.questionStartTime = null;
   }
 
   // Getter methods for tests
@@ -106,6 +109,7 @@ export class GameEngine {
 
     this.gameStarted = true;
     this.gameStartTime = Date.now();
+    this.questionStartTime = Date.now();
     
     return {
       success: true,
@@ -129,6 +133,14 @@ export class GameEngine {
 
     if (player.hasAnswered) {
       return { success: false, error: 'Player already answered' };
+    }
+
+    // Check if time limit has expired (35 seconds)
+    if (this.questionStartTime) {
+      const timeElapsed = Date.now() - this.questionStartTime;
+      if (timeElapsed > this.QUESTION_TIME_LIMIT) {
+        return { success: false, error: 'Time limit expired' };
+      }
     }
 
     const currentQuestion = this.questions[this.currentQuestionIndex];
@@ -170,9 +182,11 @@ export class GameEngine {
       player.hasAnswered = false;
     });
 
-
     // Advance to next question
     this.currentQuestionIndex++;
+    
+    // Reset question timer
+    this.questionStartTime = Date.now();
 
     // Check if game is finished
     if (this.currentQuestionIndex >= this.questions.length) {

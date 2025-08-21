@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSocket } from '../contexts/SocketContext';
 import { useUser } from '../contexts/UserContext';
 import { useLobby } from '../contexts/LobbyContext';
@@ -45,6 +45,11 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  
+  // Timer state for lobby game
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [isTimeExpired, setIsTimeExpired] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Handle successful room creation/joining
   useEffect(() => {
@@ -64,6 +69,54 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
       joinLobby(username);
     }
   }, [hasUsername, username, isInLobby, isConnected, joinLobby]);
+
+  // Start timer when new question arrives in lobby game
+  useEffect(() => {
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    // Reset timer state when question changes or game state changes
+    if (gameState === 'playing' && currentQuestion) {
+      setIsTimeExpired(false);
+      setTimeRemaining(35);
+      
+      let timeLeft = 35;
+      timerRef.current = setInterval(() => {
+        timeLeft -= 1;
+        setTimeRemaining(timeLeft);
+        
+        if (timeLeft <= 0) {
+          setIsTimeExpired(true);
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          // In lobby games, we should auto-proceed when everyone's time expires
+          // This is handled server-side
+        }
+      }, 1000);
+    } else {
+      setTimeRemaining(null);
+      setIsTimeExpired(false);
+    }
+    
+    // Cleanup on unmount or when dependencies change
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [currentQuestion, gameState]);
+
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const validateUsernameForm = (): boolean => {
     const errors: Record<string, string> = {};
@@ -228,7 +281,14 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
       return (
         <div className="lobby-game-playing">
           <div className="question-section">
-            <h3>Question {currentQuestion.currentQuestionNumber || 1} of {currentQuestion.totalQuestions || '?'}</h3>
+            <div className="question-header">
+              <h3>Question {currentQuestion.currentQuestionNumber || 1} of {currentQuestion.totalQuestions || '?'}</h3>
+              {timeRemaining !== null && (
+                <div className={`timer ${timeRemaining <= 10 ? 'timer-warning' : ''} ${isTimeExpired ? 'timer-expired' : ''}`}>
+                  {isTimeExpired ? 'Time\'s Up!' : formatTime(timeRemaining)}
+                </div>
+              )}
+            </div>
             <div className="question-text">{currentQuestion.question}</div>
             {currentQuestion.audioUrl && (
               <audio controls src={currentQuestion.audioUrl} />
@@ -258,8 +318,8 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
                 return (
                   <button
                     key={index}
-                    onClick={() => submitLobbyAnswer(index)}
-                    disabled={hasAnswered}
+                    onClick={() => !isTimeExpired && submitLobbyAnswer(index)}
+                    disabled={hasAnswered || isTimeExpired}
                     className={buttonClass}
                   >
                     {option}
@@ -270,6 +330,11 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
             {hasAnswered && (
               <div className="waiting-message">
                 <p>Waiting for other players to answer...</p>
+              </div>
+            )}
+            {isTimeExpired && !hasAnswered && (
+              <div className="waiting-message">
+                <p>Time's up! You didn't submit an answer.</p>
               </div>
             )}
             {correctAnswer !== null && (

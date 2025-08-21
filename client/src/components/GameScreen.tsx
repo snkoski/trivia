@@ -35,12 +35,17 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
     formatTime,
     allPlayersAnswered,
     isAnswerCorrect,
-    setQuestionProgress
+    setQuestionProgress,
+    startTimer,
+    stopTimer,
+    updateTimeRemaining
   } = useGame();
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [audioProgress, setAudioProgress] = useState(0);
+  const [isTimeExpired, setIsTimeExpired] = useState(false);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Track question progress
   useEffect(() => {
@@ -78,20 +83,59 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
     }
   }, [currentQuestion?.audioUrl]);
 
-  // Clear selected answer when new question arrives
+  // Clear selected answer and start timer when new question arrives
   useEffect(() => {
     clearSelectedAnswer();
     setShowResults(false);
-  }, [currentQuestion?.id, clearSelectedAnswer, setShowResults]);
+    setIsTimeExpired(false);
+    
+    // Clear any existing timer
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    // Start 35-second timer for new question
+    if (currentQuestion) {
+      startTimer(35);
+      let timeLeft = 35;
+      
+      timerRef.current = setInterval(() => {
+        timeLeft -= 1;
+        updateTimeRemaining(timeLeft);
+        
+        if (timeLeft <= 0) {
+          setIsTimeExpired(true);
+          stopTimer();
+          // Show results when time expires so user can proceed
+          if (!hasAnswered) {
+            setShowResults(true);
+          }
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+        }
+      }, 1000);
+    }
+    
+    // Cleanup on unmount or question change
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [currentQuestion?.id, clearSelectedAnswer, setShowResults, startTimer, stopTimer, updateTimeRemaining, hasAnswered]);
 
   const handleAnswerSelect = (optionIndex: number) => {
-    if (!hasAnswered && !showResults) {
+    if (!hasAnswered && !showResults && !isTimeExpired) {
       setSelectedAnswer(optionIndex);
     }
   };
 
   const handleSubmitAnswer = () => {
-    if (selectedAnswer !== null) {
+    if (selectedAnswer !== null && !isTimeExpired) {
       submitAnswer(selectedAnswer);
     }
   };
@@ -155,8 +199,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
       <div className="question-progress">
         <h2>Question {questionNumber} of {totalQuestions}</h2>
         {timeRemaining !== null && (
-          <div className={`timer ${timeRemaining <= 10 ? 'timer-warning' : ''}`}>
-            {formatTime(timeRemaining)}
+          <div className={`timer ${timeRemaining <= 10 ? 'timer-warning' : ''} ${isTimeExpired ? 'timer-expired' : ''}`}>
+            {isTimeExpired ? 'Time\'s Up!' : formatTime(timeRemaining)}
           </div>
         )}
       </div>
@@ -225,7 +269,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
               key={index}
               className={className}
               onClick={() => handleAnswerSelect(index)}
-              disabled={hasAnswered || showResults}
+              disabled={hasAnswered || showResults || isTimeExpired}
               aria-label={`Answer option ${index + 1}: ${option}`}
             >
               {option}
@@ -237,13 +281,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
   };
 
   const renderSubmitButton = () => {
-    if (hasAnswered || showResults || selectedAnswer === null) return null;
+    if (hasAnswered || showResults || selectedAnswer === null || isTimeExpired) return null;
 
     return (
       <div className="submit-container">
         <button
           onClick={handleSubmitAnswer}
           className="submit-button primary-button"
+          disabled={isTimeExpired}
         >
           Submit Answer
         </button>

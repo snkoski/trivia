@@ -21,12 +21,15 @@ export class SocketHandler {
   private gameEngines: Map<string, GameEngine>; // roomCode -> GameEngine
   private socketPlayerMap: Map<string, string>; // socketId -> playerId
   private lobbyGameEngine: GameEngine | null = null; // Global lobby game engine
+  private roundTimers: Map<string, NodeJS.Timeout>; // roomCode -> timer for auto-ending rounds
+  private lobbyRoundTimer: NodeJS.Timeout | null = null; // Timer for lobby game rounds
 
   constructor(io: SocketIOServer, roomManager: RoomManager) {
     this.io = io;
     this.roomManager = roomManager;
     this.gameEngines = new Map();
     this.socketPlayerMap = new Map();
+    this.roundTimers = new Map();
 
     this.setupEventHandlers();
   }
@@ -211,6 +214,8 @@ export class SocketHandler {
       if (result.success) {
         room.state = 'playing';
         this.io.to(socket.data.currentRoom).emit('game-started', result.question!);
+        // Start round timer (35 seconds)
+        this.startRoundTimer(socket.data.currentRoom, gameEngine);
         console.log(`Game started in room ${socket.data.currentRoom}`);
       } else {
         socket.emit('error', result.error || 'Failed to start game');
@@ -244,6 +249,9 @@ export class SocketHandler {
         const allAnswered = gameEngine.getPlayers().every(p => p.hasAnswered);
         
         if (allAnswered) {
+          // Clear the round timer since everyone answered
+          this.clearRoundTimer(socket.data.currentRoom);
+          
           // Send round results to all players
           const scores = gameEngine.getScores();
           const currentQuestion = gameEngine.getQuestions()[gameEngine.getCurrentQuestionIndex()];
@@ -332,11 +340,14 @@ export class SocketHandler {
           
           this.io.to(socket.data.currentRoom).emit('game-ended', gameEndData);
           
-          // Clean up game engine
+          // Clean up game engine and timer
           this.gameEngines.delete(socket.data.currentRoom);
+          this.clearRoundTimer(socket.data.currentRoom);
         } else {
           // Send next question
           this.io.to(socket.data.currentRoom).emit('next-question', result.question!);
+          // Start timer for the new question
+          this.startRoundTimer(socket.data.currentRoom, gameEngine);
         }
       } else {
         socket.emit('error', result.error || 'Failed to advance question');
@@ -539,6 +550,8 @@ export class SocketHandler {
       if (result.success) {
         globalLobby.updateLobbyGameState('playing');
         this.io.to('global-lobby').emit('lobby-game-started', result.question!);
+        // Start the lobby round timer
+        this.startLobbyRoundTimer();
         console.log('Lobby game started');
       } else {
         globalLobby.cancelLobbyGame(result.error || 'Failed to start');
@@ -573,6 +586,9 @@ export class SocketHandler {
         const allAnswered = this.lobbyGameEngine.getPlayers().every(p => p.hasAnswered);
         
         if (allAnswered) {
+          // Clear the lobby round timer since everyone answered
+          this.clearLobbyRoundTimer();
+          
           // Send round results to all players
           const scores = this.lobbyGameEngine.getScores();
           const currentQuestion = this.lobbyGameEngine.getQuestions()[this.lobbyGameEngine.getCurrentQuestionIndex()];
@@ -634,12 +650,15 @@ export class SocketHandler {
           
           this.io.to('global-lobby').emit('lobby-game-ended', endResult.finalScores!);
           
-          // Clean up game engine
+          // Clean up game engine and timer
           this.lobbyGameEngine = null;
+          this.clearLobbyRoundTimer();
         } else {
           // Send next question
           globalLobby.updateLobbyGameQuestion(this.lobbyGameEngine.getCurrentQuestionIndex());
           this.io.to('global-lobby').emit('lobby-game-next-question', result.question!);
+          // Start timer for the new question
+          this.startLobbyRoundTimer();
         }
       } else {
         socket.emit('error', result.error || 'Failed to advance question');
@@ -652,5 +671,63 @@ export class SocketHandler {
 
   private generatePlayerId(): string {
     return `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  private startRoundTimer(roomCode: string, gameEngine: GameEngine) {
+    // Clear any existing timer for this room
+    const existingTimer = this.roundTimers.get(roomCode);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+
+    // Set a 35-second timer to auto-end the round
+    const timer = setTimeout(() => {
+      // Force round results after 35 seconds
+      const scores = gameEngine.getScores();
+      const currentQuestion = gameEngine.getQuestions()[gameEngine.getCurrentQuestionIndex()];
+      
+      this.io.to(roomCode).emit('round-results', scores, currentQuestion.correctAnswer);
+      
+      // Clean up timer
+      this.roundTimers.delete(roomCode);
+    }, 35000); // 35 seconds
+
+    this.roundTimers.set(roomCode, timer);
+  }
+
+  private clearRoundTimer(roomCode: string) {
+    const timer = this.roundTimers.get(roomCode);
+    if (timer) {
+      clearTimeout(timer);
+      this.roundTimers.delete(roomCode);
+    }
+  }
+
+  private startLobbyRoundTimer() {
+    // Clear any existing lobby timer
+    if (this.lobbyRoundTimer) {
+      clearTimeout(this.lobbyRoundTimer);
+    }
+
+    // Set a 35-second timer to auto-end the lobby round
+    this.lobbyRoundTimer = setTimeout(() => {
+      if (this.lobbyGameEngine) {
+        // Force round results after 35 seconds
+        const scores = this.lobbyGameEngine.getScores();
+        const currentQuestion = this.lobbyGameEngine.getQuestions()[this.lobbyGameEngine.getCurrentQuestionIndex()];
+        
+        this.io.to('global-lobby').emit('lobby-game-round-results', scores, currentQuestion.correctAnswer);
+        
+        // Clean up timer
+        this.lobbyRoundTimer = null;
+      }
+    }, 35000); // 35 seconds
+  }
+
+  private clearLobbyRoundTimer() {
+    if (this.lobbyRoundTimer) {
+      clearTimeout(this.lobbyRoundTimer);
+      this.lobbyRoundTimer = null;
+    }
   }
 }
