@@ -95,9 +95,24 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
   const handleSetUsername = () => {
     if (!validateUsernameForm()) return;
     
-    setUsername(usernameInput.trim());
+    const newUsername = usernameInput.trim();
+    const isChangingUsername = username && username !== newUsername;
+    
+    // If user is already in lobby and changing username, leave first
+    if (isChangingUsername && isInLobby) {
+      leaveLobby();
+    }
+    
+    setUsername(newUsername);
     setUsernameInput('');
     setValidationErrors({});
+    
+    // If this was a username change (not initial setup), go back to main screen
+    if (username) {
+      setLobbyState('main');
+    }
+    
+    // The useEffect will handle rejoining the lobby with the new username
   };
 
   const handleCreateRoom = () => {
@@ -153,8 +168,8 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
 
   const renderUsernameScreen = () => (
     <div className="lobby-form">
-      <h2>Welcome to Trivia Game</h2>
-      <p>Please enter your name to get started</p>
+      <h2>{username ? 'Change Username' : 'Welcome to Trivia Game'}</h2>
+      <p>{username ? 'Enter your new username' : 'Please enter your name to get started'}</p>
       {renderError()}
       
       <div className="form-group">
@@ -179,8 +194,20 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
           disabled={!isConnected}
           className="primary-button"
         >
-          Continue
+          {username ? 'Update Username' : 'Continue'}
         </button>
+        {username && (
+          <button 
+            onClick={() => {
+              setUsernameInput('');
+              setValidationErrors({});
+              setLobbyState('main');
+            }}
+            className="secondary-button"
+          >
+            Cancel
+          </button>
+        )}
       </div>
     </div>
   );
@@ -316,7 +343,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
                 className="change-username-button"
                 title="Change username"
               >
-                ✏️
+                ✏️ Change
               </button>
             </div>
             {renderConnectionStatus()}
@@ -346,7 +373,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
               className="change-username-button"
               title="Change username"
             >
-              ✏️
+              ✏️ Change
             </button>
           </div>
           {renderConnectionStatus()}
