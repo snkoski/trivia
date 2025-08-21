@@ -16,7 +16,8 @@ RUN yarn install --frozen-lockfile
 # Copy source code
 COPY . .
 
-# Set the server URL for client build
+# Set environment variables
+ENV NODE_ENV=production
 ENV VITE_SERVER_URL=https://trivia-production-5dc4.up.railway.app
 
 # Build the application

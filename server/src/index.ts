@@ -24,8 +24,12 @@ app.use(express.json());
 app.use('/audio', express.static(path.join(__dirname, '../../client/public/audio')));
 
 // Serve client build files in production
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../../client/dist')));
+const clientDistPath = path.join(__dirname, '../../client/dist');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('Client dist path:', clientDistPath);
+
+if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
+  app.use(express.static(clientDistPath));
   
   // Handle client-side routing - serve index.html for non-API routes
   app.get('*', (req, res) => {
@@ -33,7 +37,7 @@ if (process.env.NODE_ENV === 'production') {
     if (req.path.startsWith('/api/') || req.path.startsWith('/health') || req.path.startsWith('/audio/')) {
       return res.status(404).json({ error: 'Route not found' });
     }
-    res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+    res.sendFile(path.join(clientDistPath, 'index.html'));
   });
 }
 
