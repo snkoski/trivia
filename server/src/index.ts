@@ -173,7 +173,7 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 // Start server
-const PORT = process.env.PORT || 3001;
+const PORT = Number(process.env.PORT) || 3001;
 
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`
