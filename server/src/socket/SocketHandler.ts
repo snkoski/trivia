@@ -437,19 +437,41 @@ export class SocketHandler {
         return;
       }
 
+      const connectedPlayers = globalLobby.getConnectedPlayers();
+      const currentLobbyGame = globalLobby.getLobbyGame();
+      console.log(`DEBUG: Start lobby game attempt by ${socket.data.playerName}`);
+      console.log(`DEBUG: Connected players count: ${connectedPlayers.length}`);
+      console.log(`DEBUG: Connected players:`, connectedPlayers.map(p => `${p.name} (${p.id})`));
+      console.log(`DEBUG: Current lobby game state: ${currentLobbyGame?.state || 'no game'}`);
+
+      // Check if there's a stuck lobby game with no actual players in it
+      if (currentLobbyGame && currentLobbyGame.state === 'playing') {
+        const currentGamePlayers = currentLobbyGame.players || [];
+        const currentGamePlayerIds = currentGamePlayers.map(p => p.id);
+        const stillConnectedGamePlayers = connectedPlayers.filter(p => currentGamePlayerIds.includes(p.id));
+        
+        console.log(`DEBUG: Current game has ${currentGamePlayers.length} players, ${stillConnectedGamePlayers.length} still connected`);
+        
+        // If no players from the current game are still connected, reset the game state
+        if (stillConnectedGamePlayers.length === 0) {
+          console.log('DEBUG: No players from previous game are connected, resetting lobby game state');
+          globalLobby.resetLobbyGame();
+        }
+      }
+
       if (!globalLobby.canStartLobbyGame()) {
         socket.emit('error', 'Cannot start lobby game (need at least 2 players or game already in progress)');
         return;
       }
 
-      const lobbyGame = globalLobby.startLobbyGame(socket.data.playerId);
-      if (!lobbyGame) {
+      const newLobbyGame = globalLobby.startLobbyGame(socket.data.playerId);
+      if (!newLobbyGame) {
         socket.emit('error', 'Failed to start lobby game');
         return;
       }
 
       // Convert lobby players to game players
-      const gamePlayers = lobbyGame.players.map(lobbyPlayer => ({
+      const gamePlayers = newLobbyGame.players.map(lobbyPlayer => ({
         id: lobbyPlayer.id,
         name: lobbyPlayer.name,
         score: 0,
@@ -464,7 +486,7 @@ export class SocketHandler {
       // Start countdown
       this.startLobbyGameCountdown();
       
-      console.log(`${socket.data.playerName} started lobby game with ${lobbyGame.players.length} players`);
+      console.log(`${socket.data.playerName} started lobby game with ${newLobbyGame.players.length} players`);
     } catch (error) {
       socket.emit('error', 'Failed to start lobby game');
       console.error('Start lobby game error:', error);

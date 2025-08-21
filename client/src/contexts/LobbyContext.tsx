@@ -222,6 +222,13 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
   }, [isInLobby, isConnected]);
 
   const startLobbyGame = useCallback(() => {
+    console.log('DEBUG CLIENT: startLobbyGame called');
+    console.log('DEBUG CLIENT: isInLobby:', isInLobby);
+    console.log('DEBUG CLIENT: isConnected:', isConnected);
+    console.log('DEBUG CLIENT: gameState:', gameState);
+    console.log('DEBUG CLIENT: players.length:', players.length);
+    console.log('DEBUG CLIENT: players:', players.map(p => `${p.name} (${p.id})`));
+    
     if (!isInLobby || !isConnected || gameState !== 'idle') return;
     
     try {
@@ -229,7 +236,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Error starting lobby game:', error);
     }
-  }, [isInLobby, isConnected, gameState]);
+  }, [isInLobby, isConnected, gameState, players]);
 
   const submitLobbyAnswer = useCallback((answerIndex: number) => {
     if (!isInLobby || !isConnected || hasAnswered || gameState !== 'playing') return;

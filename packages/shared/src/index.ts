@@ -8,7 +8,10 @@ export interface Question {
 }
 
 // Client-safe version without correct answer
-export type ClientQuestion = Omit<Question, 'correctAnswer'>;
+export interface ClientQuestion extends Omit<Question, 'correctAnswer'> {
+  currentQuestionNumber?: number;
+  totalQuestions?: number;
+}
 
 export type GameState = 'waiting' | 'playing' | 'finished';
 export type LobbyGameState = 'idle' | 'starting' | 'playing' | 'results' | 'finished';

@@ -271,7 +271,9 @@ export class GameEngine {
     const clientQuestion: ClientQuestion = {
       id: question.id,
       question: question.question,
-      options: question.options
+      options: question.options,
+      currentQuestionNumber: this.currentQuestionIndex + 1,
+      totalQuestions: this.questions.length
     };
 
     if (question.audioUrl) {

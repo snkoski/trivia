@@ -168,6 +168,11 @@ export class GlobalLobby {
     }
   }
 
+  resetLobbyGame(): void {
+    this.lobbyGame = null;
+    this.addSystemMessage('Lobby game reset - ready for a new game!');
+  }
+
   cancelLobbyGame(reason: string): void {
     if (this.lobbyGame) {
       this.lobbyGame.state = 'idle';

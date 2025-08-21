@@ -20,8 +20,6 @@ app.use(cors({
 
 app.use(express.json());
 
-// Remove the problematic middleware
-
 // Serve static audio files from client's public directory
 app.use('/audio', express.static(path.join(__dirname, '../../client/public/audio')));
 

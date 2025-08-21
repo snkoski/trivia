@@ -201,7 +201,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
       return (
         <div className="lobby-game-playing">
           <div className="question-section">
-            <h3>Question {(gameScores && Object.keys(gameScores).length > 0) ? 'In Progress' : '1'}</h3>
+            <h3>Question {currentQuestion.currentQuestionNumber || 1} of {currentQuestion.totalQuestions || '?'}</h3>
             <div className="question-text">{currentQuestion.question}</div>
             {currentQuestion.audioUrl && (
               <audio controls src={currentQuestion.audioUrl} />
