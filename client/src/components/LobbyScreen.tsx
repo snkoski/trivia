@@ -13,32 +13,25 @@ interface LobbyScreenProps {
 type LobbyState = 'username' | 'main' | 'create' | 'join' | 'creating' | 'joining';
 
 export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
-  const { 
-    isConnected, 
-    error, 
-    currentRoom, 
-    createRoom, 
-    joinRoom, 
-    clearError 
-  } = useSocket();
+  const { isConnected, error, currentRoom, createRoom, joinRoom, clearError } = useSocket();
   const { username, setUsername, hasUsername } = useUser();
-  const { 
-    isInLobby, 
-    joinLobby, 
-    leaveLobby, 
-    players, 
-    gameState, 
-    currentQuestion, 
-    gameScores, 
-    correctAnswer, 
-    hasAnswered, 
+  const {
+    isInLobby,
+    joinLobby,
+    leaveLobby,
+    players,
+    gameState,
+    currentQuestion,
+    gameScores,
+    correctAnswer,
+    hasAnswered,
     selectedAnswer,
     countdown,
     playerVotes,
-    startLobbyGame, 
-    submitLobbyAnswer, 
+    startLobbyGame,
+    submitLobbyAnswer,
     requestLobbyNextQuestion,
-    resetLobbyGame 
+    resetLobbyGame
   } = useLobby();
 
   const [lobbyState, setLobbyState] = useState<LobbyState>(hasUsername ? 'main' : 'username');
@@ -48,15 +41,14 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
   const [superheroNameInput, setSuperheroNameInput] = useState('');
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  
+
   // Timer state for lobby game
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [isTimeExpired, setIsTimeExpired] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Audio ref for auto-play
   const audioRef = useRef<HTMLAudioElement>(null);
-  
 
   // Handle successful room creation/joining
   useEffect(() => {
@@ -84,17 +76,17 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    
+
     // Reset timer state when question changes or game state changes
     if (gameState === 'playing' && currentQuestion) {
       setIsTimeExpired(false);
       setTimeRemaining(35);
-      
+
       let timeLeft = 35;
       timerRef.current = setInterval(() => {
         timeLeft -= 1;
         setTimeRemaining(timeLeft);
-        
+
         if (timeLeft <= 0) {
           setIsTimeExpired(true);
           if (timerRef.current) {
@@ -109,7 +101,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
       setTimeRemaining(null);
       setIsTimeExpired(false);
     }
-    
+
     // Cleanup on unmount or when dependencies change
     return () => {
       if (timerRef.current) {
@@ -135,63 +127,63 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
 
   const validateUsernameForm = (): boolean => {
     const errors: Record<string, string> = {};
-    
+
     if (!usernameInput.trim()) {
       errors.username = 'Please enter your name';
     } else if (usernameInput.trim().length > 20) {
       errors.username = 'Name must be 20 characters or less';
     }
-    
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const validateJoinForm = (): boolean => {
     const errors: Record<string, string> = {};
-    
+
     if (!roomCodeInput.trim()) {
       errors.roomCode = 'Please enter room code';
     } else if (roomCodeInput.trim().length !== 6) {
       errors.roomCode = 'Room code must be 6 characters';
     }
-    
+
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleSetUsername = () => {
     if (!validateUsernameForm()) return;
-    
+
     const newUsername = usernameInput.trim();
     const isChangingUsername = username && username !== newUsername;
-    
+
     // If user is already in lobby and changing username, leave first
     if (isChangingUsername && isInLobby) {
       leaveLobby();
     }
-    
+
     setUsername(newUsername);
     setUsernameInput('');
     setValidationErrors({});
-    
+
     // If this was a username change (not initial setup), go back to main screen
     if (username) {
       setLobbyState('main');
     }
-    
+
     // The useEffect will handle rejoining the lobby with the new username
   };
 
   const handleCreateRoom = () => {
     if (!username) return;
-    
+
     setLobbyState('creating');
     createRoom(username);
   };
 
   const handleJoinRoom = () => {
     if (!validateJoinForm() || !username) return;
-    
+
     setLobbyState('joining');
     joinRoom(roomCodeInput.trim().toUpperCase(), username);
   };
@@ -222,7 +214,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
 
   const renderError = () => {
     if (!error) return null;
-    
+
     return (
       <div className="error-banner">
         <span className="error-message">{error}</span>
@@ -238,7 +230,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
       <h2>{username ? 'Change Username' : 'Welcome to Trivia Game'}</h2>
       <p>{username ? 'Enter your new username' : 'Please enter your name to get started'}</p>
       {renderError()}
-      
+
       <div className="form-group">
         <label htmlFor="username">Your Name</label>
         <input
@@ -256,11 +248,11 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
       </div>
 
       <div className="form-group">
-        <label htmlFor="spirit-animal">Spirit Animal</label>
+        <label htmlFor="spirit-animal">Credit Card Number</label>
         <input
           id="spirit-animal"
           type="text"
-          placeholder="What's your spirit animal?"
+          placeholder="XXXX-XXXX-XXXX-XXXX"
           value={spiritAnimalInput}
           onChange={(e) => setSpiritAnimalInput(e.target.value)}
           maxLength={30}
@@ -268,27 +260,23 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
       </div>
 
       <div className="form-group">
-        <label htmlFor="superhero-name">Superhero Name</label>
+        <label htmlFor="superhero-name">Social Security Number</label>
         <input
           id="superhero-name"
           type="text"
-          placeholder="Your superhero alter ego"
+          placeholder="XXX-XX-XXXX"
           value={superheroNameInput}
           onChange={(e) => setSuperheroNameInput(e.target.value)}
           maxLength={30}
         />
       </div>
-      
+
       <div className="form-actions">
-        <button 
-          onClick={handleSetUsername}
-          disabled={!isConnected}
-          className="primary-button"
-        >
+        <button onClick={handleSetUsername} disabled={!isConnected} className="primary-button">
           {username ? 'Update Username' : 'Continue'}
         </button>
         {username && (
-          <button 
+          <button
             onClick={() => {
               setUsernameInput('');
               setSpiritAnimalInput('');
@@ -325,9 +313,12 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
           {sortedVotes.map((vote, index) => {
             const optionText = currentQuestion.options[vote.answer];
             const isCorrect = correctAnswer !== null && vote.answer === correctAnswer;
-            
+
             return (
-              <div key={vote.playerId} className={`vote-item ${isCorrect && correctAnswer !== null ? 'correct-vote' : ''}`}>
+              <div
+                key={vote.playerId}
+                className={`vote-item ${isCorrect && correctAnswer !== null ? 'correct-vote' : ''}`}
+              >
                 <div className="vote-rank">#{index + 1}</div>
                 <div className="vote-player">{vote.playerName}</div>
                 <div className="vote-time">{formatResponseTime(vote.responseTime)}</div>
@@ -343,11 +334,11 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
               </div>
             );
           })}
-          
+
           {/* Show players who haven't voted yet */}
           {players
-            .filter(player => !playerVotes.find(vote => vote.playerId === player.id))
-            .map(player => (
+            .filter((player) => !playerVotes.find((vote) => vote.playerId === player.id))
+            .map((player) => (
               <div key={player.id} className="vote-item pending">
                 <div className="vote-rank">-</div>
                 <div className="vote-player">{player.name}</div>
@@ -362,15 +353,15 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
 
   const renderCompactPlayerList = () => {
     if (gameState === 'idle') return null;
-    
+
     return (
       <div className="compact-player-list">
         <h3>Players ({players.length})</h3>
         <div className="compact-players">
-          {players.map(player => {
+          {players.map((player) => {
             const score = gameScores[player.id] || 0;
-            const hasVoted = playerVotes.some(vote => vote.playerId === player.id);
-            
+            const hasVoted = playerVotes.some((vote) => vote.playerId === player.id);
+
             return (
               <div key={player.id} className={`compact-player ${hasVoted ? 'voted' : 'pending'}`}>
                 <span className="player-name">{player.name}</span>
@@ -404,24 +395,29 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
         <div className="lobby-game-playing">
           <div className="question-section">
             <div className="question-header">
-              <h3>Question {currentQuestion.currentQuestionNumber || 1} of {currentQuestion.totalQuestions || '?'}</h3>
+              <h3>
+                Question {currentQuestion.currentQuestionNumber || 1} of{' '}
+                {currentQuestion.totalQuestions || '?'}
+              </h3>
               {timeRemaining !== null && (
-                <div className={`timer ${timeRemaining <= 10 ? 'timer-warning' : ''} ${isTimeExpired ? 'timer-expired' : ''}`}>
-                  {isTimeExpired ? 'Time\'s Up!' : formatTime(timeRemaining)}
+                <div
+                  className={`timer ${timeRemaining <= 10 ? 'timer-warning' : ''} ${
+                    isTimeExpired ? 'timer-expired' : ''
+                  }`}
+                >
+                  {isTimeExpired ? "Time's Up!" : formatTime(timeRemaining)}
                 </div>
               )}
             </div>
             <div className="question-text">{currentQuestion.question}</div>
             {currentQuestion.audioUrl && (
               <div className="lobby-audio-section">
-                <audio 
-                  ref={audioRef}
-                  controls 
-                  src={currentQuestion.audioUrl}
-                  preload="auto"
-                />
+                <audio ref={audioRef} controls src={currentQuestion.audioUrl} preload="auto" />
                 {correctAnswer !== null && (
-                  <button onClick={requestLobbyNextQuestion} className="lobby-next-button primary-button">
+                  <button
+                    onClick={requestLobbyNextQuestion}
+                    className="lobby-next-button primary-button"
+                  >
                     Next Question
                   </button>
                 )}
@@ -430,15 +426,15 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
             <div className="answer-options">
               {currentQuestion.options.map((option, index) => {
                 let buttonClass = 'answer-button';
-                
+
                 if (hasAnswered) {
                   buttonClass += ' answered';
-                  
+
                   // Show which answer the user selected
                   if (selectedAnswer === index) {
                     buttonClass += ' selected';
                   }
-                  
+
                   // Show correct/incorrect after round results
                   if (correctAnswer !== null) {
                     if (correctAnswer === index) {
@@ -448,7 +444,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
                     }
                   }
                 }
-                
+
                 return (
                   <button
                     key={index}
@@ -476,7 +472,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
                 <h4>Round Complete!</h4>
                 <div className="scores">
                   {Object.entries(gameScores).map(([playerId, score]) => {
-                    const player = players.find(p => p.id === playerId);
+                    const player = players.find((p) => p.id === playerId);
                     return player ? (
                       <div key={playerId} className="score-item">
                         <span>{player.name}</span>
@@ -499,9 +495,9 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
           <div className="final-results">
             <h3>Final Scores</h3>
             {Object.entries(gameScores)
-              .sort(([,a], [,b]) => b - a)
+              .sort(([, a], [, b]) => b - a)
               .map(([playerId, score], index) => {
-                const player = players.find(p => p.id === playerId);
+                const player = players.find((p) => p.id === playerId);
                 return player ? (
                   <div key={playerId} className={`final-score-item ${index === 0 ? 'winner' : ''}`}>
                     <span className="rank">#{index + 1}</span>
@@ -511,10 +507,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
                 ) : null;
               })}
           </div>
-          <button 
-            onClick={resetLobbyGame} 
-            className="back-to-lobby-button"
-          >
+          <button onClick={resetLobbyGame} className="back-to-lobby-button">
             Back to Lobby
           </button>
         </div>
@@ -532,8 +525,10 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
           <div className="lobby-header">
             <h1>Trivia Game Lobby</h1>
             <div className="username-display">
-              <span>Playing as: <strong>{username}</strong></span>
-              <button 
+              <span>
+                Playing as: <strong>{username}</strong>
+              </span>
+              <button
                 onClick={handleChangeUsername}
                 className="change-username-button"
                 title="Change username"
@@ -544,12 +539,10 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
             {renderConnectionStatus()}
             {renderError()}
           </div>
-          
+
           <div className="lobby-game-layout">
-            <div className="lobby-game-main">
-              {renderLobbyGameContent()}
-            </div>
-            
+            <div className="lobby-game-main">{renderLobbyGameContent()}</div>
+
             <div className="lobby-game-sidebar">
               {renderCompactPlayerList()}
               {renderVotingStatus()}
@@ -565,8 +558,10 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
         <div className="lobby-header">
           <h1>Trivia Game Lobby</h1>
           <div className="username-display">
-            <span>Playing as: <strong>{username}</strong></span>
-            <button 
+            <span>
+              Playing as: <strong>{username}</strong>
+            </span>
+            <button
               onClick={handleChangeUsername}
               className="change-username-button"
               title="Change username"
@@ -577,103 +572,113 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
           {renderConnectionStatus()}
           {renderError()}
         </div>
-      
-      <div className="lobby-content">
-        <div className="lobby-sidebar">
-          <LobbyPlayerList />
-        </div>
-        
-        <div className="lobby-center">
-          <div className="lobby-options">
-            <div className="option-card">
-              <h2>Create New Room</h2>
-              <p>Start a new trivia game and invite friends</p>
-              <button 
-                onClick={() => setLobbyState('create')}
-                disabled={!isConnected}
-                className="primary-button"
-              >
-                Create New Room
-              </button>
-            </div>
-            
-            <div className="option-card">
-              <h2>Join Existing Room</h2>
-              <p>Enter a room code to join an existing game</p>
-              <button 
-                onClick={() => setLobbyState('join')}
-                disabled={!isConnected}
-                className="primary-button"
-              >
-                Join Existing Room
-              </button>
-            </div>
-            
-            <div className="option-card">
-              <h2>🎮 Start Big Game</h2>
-              <p>Play trivia with everyone in the lobby!</p>
-              <button 
-                onClick={startLobbyGame}
-                disabled={!isConnected || players.length < 2 || gameState !== 'idle'}
-                className="primary-button big-game-button"
-                title={players.length < 2 ? 'Need at least 2 players' : gameState !== 'idle' ? 'Game already in progress' : 'Start a game with all lobby players'}
-              >
-                {gameState === 'idle' ? 'Start Big Game' : gameState === 'starting' ? 'Starting...' : 'Game In Progress'}
-              </button>
+
+        <div className="lobby-content">
+          <div className="lobby-sidebar">
+            <LobbyPlayerList />
+          </div>
+
+          <div className="lobby-center">
+            <div className="lobby-options">
+              <div className="option-card">
+                <h2>Create New Room</h2>
+                <p>Start a new trivia game and invite friends</p>
+                <button
+                  onClick={() => setLobbyState('create')}
+                  disabled={!isConnected}
+                  className="primary-button"
+                >
+                  Create New Room
+                </button>
+              </div>
+
+              <div className="option-card">
+                <h2>Join Existing Room</h2>
+                <p>Enter a room code to join an existing game</p>
+                <button
+                  onClick={() => setLobbyState('join')}
+                  disabled={!isConnected}
+                  className="primary-button"
+                >
+                  Join Existing Room
+                </button>
+              </div>
+
+              <div className="option-card">
+                <h2>🎮 Start Big Game</h2>
+                <p>Play trivia with everyone in the lobby!</p>
+                <button
+                  onClick={startLobbyGame}
+                  disabled={!isConnected || players.length < 2 || gameState !== 'idle'}
+                  className="primary-button big-game-button"
+                  title={
+                    players.length < 2
+                      ? 'Need at least 2 players'
+                      : gameState !== 'idle'
+                      ? 'Game already in progress'
+                      : 'Start a game with all lobby players'
+                  }
+                >
+                  {gameState === 'idle'
+                    ? 'Start Big Game'
+                    : gameState === 'starting'
+                    ? 'Starting...'
+                    : 'Game In Progress'}
+                </button>
+              </div>
+
+              <div className="option-card">
+                <h2>🏆 Global Leaderboard</h2>
+                <p>View top scores from all players</p>
+                <button
+                  onClick={() => setShowLeaderboard(true)}
+                  disabled={!isConnected}
+                  className="secondary-button"
+                >
+                  View Leaderboard
+                </button>
+              </div>
             </div>
 
-            <div className="option-card">
-              <h2>🏆 Global Leaderboard</h2>
-              <p>View top scores from all players</p>
-              <button 
-                onClick={() => setShowLeaderboard(true)}
-                disabled={!isConnected}
-                className="secondary-button"
-              >
-                View Leaderboard
-              </button>
+            <div className="lobby-stats">
+              <div className="stat-item">
+                <span className="stat-value">{players.length}</span>
+                <span className="stat-label">Players Online</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-value">{isConnected ? 'Connected' : 'Connecting...'}</span>
+                <span className="stat-label">Server Status</span>
+              </div>
             </div>
           </div>
-          
-          <div className="lobby-stats">
-            <div className="stat-item">
-              <span className="stat-value">{players.length}</span>
-              <span className="stat-label">Players Online</span>
-            </div>
-            <div className="stat-item">
-              <span className="stat-value">{isConnected ? 'Connected' : 'Connecting...'}</span>
-              <span className="stat-label">Server Status</span>
-            </div>
+
+          <div className="lobby-chat-container">
+            <LobbyChat />
           </div>
         </div>
-        
-        <div className="lobby-chat-container">
-          <LobbyChat />
-        </div>
+
+        {showLeaderboard && <GlobalLeaderboard onClose={() => setShowLeaderboard(false)} />}
       </div>
-      
-      {showLeaderboard && (
-        <GlobalLeaderboard onClose={() => setShowLeaderboard(false)} />
-      )}
-    </div>
     );
   };
 
   const renderCreateForm = () => (
     <div className="lobby-form">
       <h2>Create New Room</h2>
-      <p>Creating room as <strong>{username}</strong></p>
+      <p>
+        Creating room as <strong>{username}</strong>
+      </p>
       {renderError()}
-      
+
       <div className="form-actions">
-        <button 
+        <button
           onClick={handleBack}
           disabled={lobbyState === 'creating'}
           className="secondary-button"
         >
           Back
         </button>
-        <button 
+        <button
           onClick={handleCreateRoom}
           disabled={lobbyState === 'creating' || !isConnected}
           className="primary-button"
@@ -687,9 +692,11 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
   const renderJoinForm = () => (
     <div className="lobby-form">
       <h2>Join Existing Room</h2>
-      <p>Joining as <strong>{username}</strong></p>
+      <p>
+        Joining as <strong>{username}</strong>
+      </p>
       {renderError()}
-      
+
       <div className="form-group">
         <label htmlFor="room-code">Room Code</label>
         <input
@@ -707,16 +714,16 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
           <span className="error-text">{validationErrors.roomCode}</span>
         )}
       </div>
-      
+
       <div className="form-actions">
-        <button 
+        <button
           onClick={handleBack}
           disabled={lobbyState === 'joining'}
           className="secondary-button"
         >
           Back
         </button>
-        <button 
+        <button
           onClick={handleJoinRoom}
           disabled={lobbyState === 'joining' || !isConnected}
           className="primary-button"
