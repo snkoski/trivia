@@ -54,6 +54,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
   
   // Audio ref for auto-play
   const audioRef = useRef<HTMLAudioElement>(null);
+  
 
   // Handle successful room creation/joining
   useEffect(() => {
@@ -116,14 +117,11 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
     };
   }, [currentQuestion, gameState]);
 
-  // Auto-play audio when question changes in lobby game
+  // Set audio source when question changes (no auto-play)
   useEffect(() => {
     if (gameState === 'playing' && currentQuestion?.audioUrl && audioRef.current) {
       audioRef.current.src = currentQuestion.audioUrl;
-      const playPromise = audioRef.current.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(err => console.log('Audio autoplay failed:', err));
-      }
+      // No auto-play - user must manually start audio
     }
   }, [currentQuestion?.audioUrl, gameState]);
 
