@@ -1,10 +1,7 @@
 import { Question } from '../../../packages/shared/dist';
 
 const getAudioUrl = (filename: string) => {
-  const baseUrl = process.env.NODE_ENV === 'production' 
-    ? 'https://trivia-production-5dc4.up.railway.app'
-    : 'http://localhost:3001';
-  return `${baseUrl}/audio/${filename}`;
+  return `https://pub-3e59ba9f7b4a44c0b35848cd99378892.r2.dev/${filename}`;
 };
 
 export const mockQuestions: Question[] = [
