@@ -52,8 +52,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
     if (currentQuestion && currentRoom) {
       // Question index is 0-based, but we want to show 1-based to the user
       const currentQuestionNumber = (currentRoom.currentQuestionIndex || 0) + 1;
-      // We now have 5 audio questions
-      const totalQuestions = 5;
+      // We now have 8 audio questions
+      const totalQuestions = 8;
       setQuestionProgress(currentQuestionNumber, totalQuestions);
     }
   }, [currentQuestion, currentRoom, setQuestionProgress]);

@@ -413,6 +413,53 @@ html, body {
   animation: shake 0.5s ease;
 }
 
+/* Answer Options Container */
+.answer-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Base Answer Button Styles */
+.answer-button,
+.answer-option {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 15px 20px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.answer-button:hover,
+.answer-option:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.answer-button:active,
+.answer-option:active {
+  transform: translateY(0);
+}
+
 .answer-button.selected {
   background: linear-gradient(135deg, #E55A7F 0%, #E66946 100%) !important;
   border-color: #E55A7F !important;
