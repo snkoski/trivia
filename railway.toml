@@ -1,17 +1,8 @@
 [build]
-builder = "NIXPACKS"
-
-[build.nixpacks]
-buildCmd = "yarn install && yarn build"
-startCmd = "yarn workspace server start"
-
-[build.nixpacksConfig]
-nixpkgs = "nodejs_22"
+builder = "DOCKERFILE"
 
 [deploy]
 healthcheckPath = "/health"
 healthcheckTimeout = 60
-
-[variables]
-NODE_VERSION = "22.12.0"
-NIXPACKS_NODE_VERSION = "22"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
