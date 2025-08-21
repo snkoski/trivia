@@ -44,6 +44,15 @@ export interface ChatMessage {
   type: 'message' | 'system';
 }
 
+// Vote tracking for lobby games
+export interface PlayerVote {
+  playerId: string;
+  playerName: string;
+  answer: number;
+  responseTime: number; // milliseconds from question start
+  timestamp: Date;
+}
+
 // Lobby Game Types
 export interface LobbyGame {
   state: LobbyGameState;
@@ -89,6 +98,7 @@ export interface ServerToClientEvents {
   'lobby-game-started': (question: ClientQuestion) => void;
   'lobby-game-next-question': (question: ClientQuestion) => void;
   'lobby-game-player-answered': (playerId: string) => void;
+  'lobby-game-player-voted': (vote: PlayerVote) => void;
   'lobby-game-round-results': (scores: Record<string, number>, correctAnswer: number) => void;
   'lobby-game-ended': (finalScores: Record<string, number>) => void;
   'lobby-game-cancelled': (reason: string) => void;

@@ -278,9 +278,87 @@ class SocketService {
     this.socket.on('lobby-game-ended', callback);
   }
 
+  onLobbyGamePlayerVoted(callback: (vote: import('@trivia/shared').PlayerVote) => void): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.on('lobby-game-player-voted', callback);
+  }
+
   onLobbyGameCancelled(callback: (reason: string) => void): void {
     if (!this.socket) throw new Error('Socket not connected');
     this.socket.on('lobby-game-cancelled', callback);
+  }
+
+  // Remove lobby game listeners
+  offLobbyGameStarting(callback?: (countdown: number) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('lobby-game-starting', callback);
+    } else {
+      this.socket.off('lobby-game-starting');
+    }
+  }
+
+  offLobbyGameStarted(callback?: (question: ClientQuestion) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('lobby-game-started', callback);
+    } else {
+      this.socket.off('lobby-game-started');
+    }
+  }
+
+  offLobbyGameNextQuestion(callback?: (question: ClientQuestion) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('lobby-game-next-question', callback);
+    } else {
+      this.socket.off('lobby-game-next-question');
+    }
+  }
+
+  offLobbyGamePlayerAnswered(callback?: (playerId: string) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('lobby-game-player-answered', callback);
+    } else {
+      this.socket.off('lobby-game-player-answered');
+    }
+  }
+
+  offLobbyGamePlayerVoted(callback?: (vote: import('@trivia/shared').PlayerVote) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('lobby-game-player-voted', callback);
+    } else {
+      this.socket.off('lobby-game-player-voted');
+    }
+  }
+
+  offLobbyGameRoundResults(callback?: (scores: Record<string, number>, correctAnswer: number) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('lobby-game-round-results', callback);
+    } else {
+      this.socket.off('lobby-game-round-results');
+    }
+  }
+
+  offLobbyGameEnded(callback?: (finalScores: Record<string, number>) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('lobby-game-ended', callback);
+    } else {
+      this.socket.off('lobby-game-ended');
+    }
+  }
+
+  offLobbyGameCancelled(callback?: (reason: string) => void): void {
+    if (!this.socket) return;
+    if (callback) {
+      this.socket.off('lobby-game-cancelled', callback);
+    } else {
+      this.socket.off('lobby-game-cancelled');
+    }
   }
 
   // Clean up listeners

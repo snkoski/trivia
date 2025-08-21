@@ -962,3 +962,195 @@ html, body {
     transform: scale(1.05);
   }
 }
+
+/* Lobby Game Layout */
+.lobby-game-layout {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.lobby-game-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.lobby-game-sidebar {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Compact Player List */
+.compact-player-list {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 20px;
+}
+
+.compact-player-list h3 {
+  margin: 0 0 15px 0;
+  color: #fff;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.compact-players {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.compact-player {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.compact-player.voted {
+  background: rgba(76, 175, 80, 0.1);
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+.compact-player.pending {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: rgba(255, 193, 7, 0.3);
+}
+
+.compact-player .player-name {
+  color: #fff;
+  font-weight: 500;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compact-player .player-score {
+  color: #4caf50;
+  font-weight: bold;
+  margin-left: 8px;
+}
+
+.compact-player .vote-status {
+  margin-left: 8px;
+  font-size: 1.1rem;
+}
+
+/* Voting Status */
+.voting-status {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.voting-status h3 {
+  margin: 0 0 15px 0;
+  color: #fff;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.votes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vote-item {
+  display: grid;
+  grid-template-columns: 30px 1fr 60px 80px;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.vote-item.correct-vote {
+  background: rgba(76, 175, 80, 0.15);
+  border-color: rgba(76, 175, 80, 0.4);
+}
+
+.vote-item.pending {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: rgba(255, 193, 7, 0.3);
+  opacity: 0.7;
+}
+
+.vote-rank {
+  font-weight: bold;
+  color: #ffc107;
+  text-align: center;
+}
+
+.vote-player {
+  color: #fff;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vote-time {
+  color: #a0a0a0;
+  font-size: 0.8rem;
+  text-align: right;
+}
+
+.vote-answer {
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.vote-answer .correct {
+  color: #4caf50;
+}
+
+.vote-answer .incorrect {
+  color: #f44336;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .lobby-game-layout {
+    flex-direction: column;
+  }
+  
+  .lobby-game-sidebar {
+    width: 100%;
+    flex-direction: row;
+  }
+  
+  .compact-player-list,
+  .voting-status {
+    flex: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .lobby-game-sidebar {
+    flex-direction: column;
+  }
+  
+  .vote-item {
+    grid-template-columns: 25px 1fr 50px 60px;
+    font-size: 0.8rem;
+  }
+}

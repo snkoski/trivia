@@ -3,7 +3,7 @@ import { RoomManager } from '../services/RoomManager';
 import { GameEngine } from '../services/GameEngine';
 import { globalLeaderboard } from '../services/GlobalLeaderboard';
 import { globalLobby } from '../services/GlobalLobby';
-import { ClientToServerEvents, ServerToClientEvents, Question } from '../../../packages/shared/dist';
+import { ClientToServerEvents, ServerToClientEvents, Question, PlayerVote } from '../../../packages/shared/dist';
 import { mockQuestions } from '../data/questions';
 
 type SocketWithData = Socket<ClientToServerEvents, ServerToClientEvents> & {
@@ -23,6 +23,7 @@ export class SocketHandler {
   private lobbyGameEngine: GameEngine | null = null; // Global lobby game engine
   private roundTimers: Map<string, NodeJS.Timeout>; // roomCode -> timer for auto-ending rounds
   private lobbyRoundTimer: NodeJS.Timeout | null = null; // Timer for lobby game rounds
+  private lobbyQuestionStartTime: number | null = null; // Track when current lobby question started
 
   constructor(io: SocketIOServer, roomManager: RoomManager) {
     this.io = io;
@@ -397,6 +398,7 @@ export class SocketHandler {
       const allPlayers = globalLobby.getAllPlayers();
       socket.emit('lobby-players-updated', allPlayers);
       
+      
       // Notify other lobby players
       socket.to('global-lobby').emit('lobby-player-joined', player);
       socket.to('global-lobby').emit('lobby-players-updated', allPlayers);
@@ -549,6 +551,7 @@ export class SocketHandler {
       
       if (result.success) {
         globalLobby.updateLobbyGameState('playing');
+        this.lobbyQuestionStartTime = Date.now(); // Track when question started
         this.io.to('global-lobby').emit('lobby-game-started', result.question!);
         // Start the lobby round timer
         this.startLobbyRoundTimer();
@@ -579,8 +582,20 @@ export class SocketHandler {
       const result = this.lobbyGameEngine.submitAnswer(socket.data.playerId, answerIndex);
       
       if (result.success) {
-        // Notify all players that this player answered
-        this.io.to('global-lobby').emit('lobby-game-player-answered', socket.data.playerId);
+        // Calculate response time
+        const responseTime = this.lobbyQuestionStartTime ? Date.now() - this.lobbyQuestionStartTime : 0;
+        
+        // Create vote details
+        const vote: PlayerVote = {
+          playerId: socket.data.playerId,
+          playerName: socket.data.playerName,
+          answer: answerIndex,
+          responseTime,
+          timestamp: new Date()
+        };
+        
+        // Notify all players that this player voted with details
+        this.io.to('global-lobby').emit('lobby-game-player-voted', vote);
         
         // Check if all players have answered
         const allAnswered = this.lobbyGameEngine.getPlayers().every(p => p.hasAnswered);
@@ -656,6 +671,7 @@ export class SocketHandler {
         } else {
           // Send next question
           globalLobby.updateLobbyGameQuestion(this.lobbyGameEngine.getCurrentQuestionIndex());
+          this.lobbyQuestionStartTime = Date.now(); // Reset timing for new question
           this.io.to('global-lobby').emit('lobby-game-next-question', result.question!);
           // Start timer for the new question
           this.startLobbyRoundTimer();

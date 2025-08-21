@@ -86,6 +86,7 @@ export class GameEngine {
     return this.gameStartTime || 0;
   }
 
+
   getScores(): Record<string, number> {
     const scores: Record<string, number> = {};
     this.players.forEach(player => {

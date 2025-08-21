@@ -34,6 +34,7 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
     hasAnswered, 
     selectedAnswer,
     countdown,
+    playerVotes,
     startLobbyGame, 
     submitLobbyAnswer, 
     requestLobbyNextQuestion,
@@ -278,6 +279,87 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
     </div>
   );
 
+  const formatResponseTime = (ms: number): string => {
+    if (ms < 1000) {
+      return `${ms}ms`;
+    }
+    return `${(ms / 1000).toFixed(1)}s`;
+  };
+
+  const renderVotingStatus = () => {
+    if (gameState !== 'playing' || !currentQuestion) return null;
+
+    // Sort votes by response time
+    const sortedVotes = [...playerVotes].sort((a, b) => a.responseTime - b.responseTime);
+
+    return (
+      <div className="voting-status">
+        <h3>Live Voting</h3>
+        <div className="votes-list">
+          {sortedVotes.map((vote, index) => {
+            const optionText = currentQuestion.options[vote.answer];
+            const isCorrect = correctAnswer !== null && vote.answer === correctAnswer;
+            
+            return (
+              <div key={vote.playerId} className={`vote-item ${isCorrect && correctAnswer !== null ? 'correct-vote' : ''}`}>
+                <div className="vote-rank">#{index + 1}</div>
+                <div className="vote-player">{vote.playerName}</div>
+                <div className="vote-time">{formatResponseTime(vote.responseTime)}</div>
+                <div className="vote-answer">
+                  {correctAnswer !== null ? (
+                    <span className={isCorrect ? 'correct' : 'incorrect'}>
+                      {optionText} {isCorrect ? '✓' : '✗'}
+                    </span>
+                  ) : (
+                    <span>Voted</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          
+          {/* Show players who haven't voted yet */}
+          {players
+            .filter(player => !playerVotes.find(vote => vote.playerId === player.id))
+            .map(player => (
+              <div key={player.id} className="vote-item pending">
+                <div className="vote-rank">-</div>
+                <div className="vote-player">{player.name}</div>
+                <div className="vote-time">Thinking...</div>
+                <div className="vote-answer">⏳</div>
+              </div>
+            ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderCompactPlayerList = () => {
+    if (gameState === 'idle') return null;
+    
+    return (
+      <div className="compact-player-list">
+        <h3>Players ({players.length})</h3>
+        <div className="compact-players">
+          {players.map(player => {
+            const score = gameScores[player.id] || 0;
+            const hasVoted = playerVotes.some(vote => vote.playerId === player.id);
+            
+            return (
+              <div key={player.id} className={`compact-player ${hasVoted ? 'voted' : 'pending'}`}>
+                <span className="player-name">{player.name}</span>
+                <span className="player-score">{score}</span>
+                {gameState === 'playing' && (
+                  <span className="vote-status">{hasVoted ? '✓' : '⏳'}</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   const renderLobbyGameContent = () => {
     if (gameState === 'starting' && countdown !== null) {
       return (
@@ -433,12 +515,15 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
             {renderError()}
           </div>
           
-          <div className="lobby-game-container">
-            {renderLobbyGameContent()}
-          </div>
-          
-          <div className="lobby-sidebar-during-game">
-            <LobbyPlayerList />
+          <div className="lobby-game-layout">
+            <div className="lobby-game-main">
+              {renderLobbyGameContent()}
+            </div>
+            
+            <div className="lobby-game-sidebar">
+              {renderCompactPlayerList()}
+              {renderVotingStatus()}
+            </div>
           </div>
         </div>
       );

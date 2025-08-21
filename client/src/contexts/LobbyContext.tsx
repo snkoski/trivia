@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import type { ReactNode } from 'react';
 import { socketService } from '../services/socket';
 import { useSocket } from './SocketContext';
-import type { LobbyPlayer, ChatMessage, ClientQuestion, LobbyGameState } from '@trivia/shared';
+import type { LobbyPlayer, ChatMessage, ClientQuestion, LobbyGameState, PlayerVote } from '@trivia/shared';
 
 interface LobbyContextType {
   // Lobby state
@@ -18,6 +18,7 @@ interface LobbyContextType {
   hasAnswered: boolean;
   selectedAnswer: number | null;
   countdown: number | null;
+  playerVotes: PlayerVote[];
   
   // Actions
   joinLobby: (playerName: string) => void;
@@ -63,6 +64,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
   const [hasAnswered, setHasAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [playerVotes, setPlayerVotes] = useState<PlayerVote[]>([]);
 
   // Setup socket listeners only when connected
   useEffect(() => {
@@ -110,6 +112,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
       setSelectedAnswer(null);
       setCorrectAnswer(null);
       setCountdown(null);
+      setPlayerVotes([]); // Clear votes for new question
     };
 
     const handleLobbyGameNextQuestion = (question: ClientQuestion) => {
@@ -117,10 +120,24 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
       setHasAnswered(false);
       setSelectedAnswer(null);
       setCorrectAnswer(null);
+      setPlayerVotes([]); // Clear votes for new question
     };
 
     const handleLobbyGamePlayerAnswered = (playerId: string) => {
       console.log(`Player ${playerId} answered`);
+    };
+
+    const handleLobbyGamePlayerVoted = (vote: PlayerVote) => {
+      console.log('Vote received:', vote);
+      setPlayerVotes(prev => {
+        // Check if this vote already exists to prevent duplicates
+        const existingVote = prev.find(v => v.playerId === vote.playerId && v.timestamp.getTime() === new Date(vote.timestamp).getTime());
+        if (existingVote) {
+          console.log('Duplicate vote detected, skipping:', vote);
+          return prev;
+        }
+        return [...prev, vote];
+      });
     };
 
     const handleLobbyGameRoundResults = (scores: Record<string, number>, answer: number) => {
@@ -148,6 +165,16 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
       socketService.offLobbyPlayerLeft();
       socketService.offLobbyChatMessage();
       socketService.offLobbyChatHistory();
+      
+      // Remove lobby game listeners
+      socketService.offLobbyGameStarting();
+      socketService.offLobbyGameStarted();
+      socketService.offLobbyGameNextQuestion();
+      socketService.offLobbyGamePlayerAnswered();
+      socketService.offLobbyGamePlayerVoted();
+      socketService.offLobbyGameRoundResults();
+      socketService.offLobbyGameEnded();
+      socketService.offLobbyGameCancelled();
 
       // Add new listeners
       socketService.onLobbyPlayersUpdated(handlePlayersUpdated);
@@ -161,6 +188,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
       socketService.onLobbyGameStarted(handleLobbyGameStarted);
       socketService.onLobbyGameNextQuestion(handleLobbyGameNextQuestion);
       socketService.onLobbyGamePlayerAnswered(handleLobbyGamePlayerAnswered);
+      socketService.onLobbyGamePlayerVoted(handleLobbyGamePlayerVoted);
       socketService.onLobbyGameRoundResults(handleLobbyGameRoundResults);
       socketService.onLobbyGameEnded(handleLobbyGameEnded);
       socketService.onLobbyGameCancelled(handleLobbyGameCancelled);
@@ -170,12 +198,22 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
 
     // Cleanup function
     return () => {
-      // Remove listeners
+      // Remove listeners with specific callbacks
       socketService.offLobbyPlayersUpdated(handlePlayersUpdated);
       socketService.offLobbyPlayerJoined(handlePlayerJoined);
       socketService.offLobbyPlayerLeft(handlePlayerLeft);
       socketService.offLobbyChatMessage(handleChatMessage);
       socketService.offLobbyChatHistory(handleChatHistory);
+      
+      // Remove lobby game listeners with specific callbacks
+      socketService.offLobbyGameStarting(handleLobbyGameStarting);
+      socketService.offLobbyGameStarted(handleLobbyGameStarted);
+      socketService.offLobbyGameNextQuestion(handleLobbyGameNextQuestion);
+      socketService.offLobbyGamePlayerAnswered(handleLobbyGamePlayerAnswered);
+      socketService.offLobbyGamePlayerVoted(handleLobbyGamePlayerVoted);
+      socketService.offLobbyGameRoundResults(handleLobbyGameRoundResults);
+      socketService.offLobbyGameEnded(handleLobbyGameEnded);
+      socketService.offLobbyGameCancelled(handleLobbyGameCancelled);
       
       // Leave lobby if needed
       if (isInLobby && isConnected) {
@@ -272,6 +310,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     setHasAnswered(false);
     setSelectedAnswer(null);
     setCountdown(null);
+    setPlayerVotes([]);
   }, []);
 
   const value: LobbyContextType = {
@@ -285,6 +324,7 @@ export const LobbyProvider: React.FC<LobbyProviderProps> = ({ children }) => {
     hasAnswered,
     selectedAnswer,
     countdown,
+    playerVotes,
     joinLobby,
     leaveLobby,
     sendMessage,
