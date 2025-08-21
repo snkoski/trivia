@@ -138,8 +138,8 @@ describe('GameEngine', () => {
 
         expect(result.success).toBe(true);
         expect(result.isCorrect).toBe(true);
-        expect(result.pointsAwarded).toBe(150); // First correct gets bonus
-        expect(gameEngine.getScores()['player1']).toBe(150);
+        expect(result.pointsAwarded).toBe(100); // All correct answers get same points
+        expect(gameEngine.getScores()['player1']).toBe(100);
       });
 
       it('should accept incorrect answer and award no points', () => {
@@ -158,12 +158,12 @@ describe('GameEngine', () => {
         expect(player?.hasAnswered).toBe(true);
       });
 
-      it('should award bonus points for first correct answer', () => {
+      it('should award same points for all correct answers', () => {
         const firstResult = gameEngine.submitAnswer('player1', 1); // First correct
         const secondResult = gameEngine.submitAnswer('player2', 1); // Second correct
 
-        expect(firstResult.pointsAwarded).toBe(150); // Base + bonus
-        expect(secondResult.pointsAwarded).toBe(100); // Base only
+        expect(firstResult.pointsAwarded).toBe(100); // Same points for all
+        expect(secondResult.pointsAwarded).toBe(100); // Same points for all
       });
     });
 
@@ -337,13 +337,13 @@ describe('GameEngine', () => {
     });
 
     it('should accumulate scores across questions', () => {
-      gameEngine.submitAnswer('player1', 1); // Correct (150 - first correct)
+      gameEngine.submitAnswer('player1', 1); // Correct (100 points)
       gameEngine.nextQuestion();
-      gameEngine.submitAnswer('player1', 2); // Correct (150 - first correct of next question)
+      gameEngine.submitAnswer('player1', 2); // Correct (100 points)
 
       const scores = gameEngine.getScores();
 
-      expect(scores['player1']).toBe(300); // Two first-correct answers
+      expect(scores['player1']).toBe(200); // Two correct answers
     });
   });
 
@@ -353,15 +353,15 @@ describe('GameEngine', () => {
     });
 
     it('should return players sorted by score', () => {
-      gameEngine.submitAnswer('player2', 1); // Bob correct first (150 points)
-      gameEngine.submitAnswer('player1', 1); // Alice correct second (100 points)
+      gameEngine.submitAnswer('player2', 1); // Bob correct (100 points)
+      gameEngine.submitAnswer('player1', 0); // Alice incorrect (0 points)
 
       const leaderboard = gameEngine.getLeaderboard();
 
       expect(leaderboard[0].playerId).toBe('player2');
-      expect(leaderboard[0].score).toBe(150);
+      expect(leaderboard[0].score).toBe(100);
       expect(leaderboard[1].playerId).toBe('player1');
-      expect(leaderboard[1].score).toBe(100);
+      expect(leaderboard[1].score).toBe(0);
     });
 
     it('should handle tied scores with stable sort', () => {
@@ -396,7 +396,7 @@ describe('GameEngine', () => {
 
       expect(result.finalScores).toBeDefined();
       expect(result.winner).toBe('player1');
-      expect(result.winnerScore).toBe(150);
+      expect(result.winnerScore).toBe(100);
     });
 
     it('should handle tied winners', () => {

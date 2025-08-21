@@ -47,7 +47,6 @@ export class GameEngine {
   private gameFinished: boolean;
   private gameStartTime: number | null;
   private gameEndTime: number | null;
-  private firstCorrectAnswerer: string | null; // For bonus points
 
   constructor(questions: Question[], players: Player[]) {
     this.questions = questions;
@@ -57,7 +56,6 @@ export class GameEngine {
     this.gameFinished = false;
     this.gameStartTime = null;
     this.gameEndTime = null;
-    this.firstCorrectAnswerer = null;
   }
 
   // Getter methods for tests
@@ -147,14 +145,7 @@ export class GameEngine {
     let pointsAwarded = 0;
 
     if (isCorrect) {
-      pointsAwarded = 100; // Base points
-
-      // Award bonus for first correct answer
-      if (!this.firstCorrectAnswerer) {
-        this.firstCorrectAnswerer = playerId;
-        pointsAwarded = 150; // Base + bonus
-      }
-
+      pointsAwarded = 100; // All correct answers get same points
       player.score += pointsAwarded;
     }
 
@@ -179,8 +170,6 @@ export class GameEngine {
       player.hasAnswered = false;
     });
 
-    // Reset first correct answerer for next question
-    this.firstCorrectAnswerer = null;
 
     // Advance to next question
     this.currentQuestionIndex++;
