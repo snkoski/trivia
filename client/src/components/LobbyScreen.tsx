@@ -50,6 +50,9 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [isTimeExpired, setIsTimeExpired] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Audio ref for auto-play
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   // Handle successful room creation/joining
   useEffect(() => {
@@ -111,6 +114,17 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
       }
     };
   }, [currentQuestion, gameState]);
+
+  // Auto-play audio when question changes in lobby game
+  useEffect(() => {
+    if (gameState === 'playing' && currentQuestion?.audioUrl && audioRef.current) {
+      audioRef.current.src = currentQuestion.audioUrl;
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(err => console.log('Audio autoplay failed:', err));
+      }
+    }
+  }, [currentQuestion?.audioUrl, gameState]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -291,7 +305,12 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
             </div>
             <div className="question-text">{currentQuestion.question}</div>
             {currentQuestion.audioUrl && (
-              <audio controls src={currentQuestion.audioUrl} />
+              <audio 
+                ref={audioRef}
+                controls 
+                src={currentQuestion.audioUrl}
+                preload="auto"
+              />
             )}
             <div className="answer-options">
               {currentQuestion.options.map((option, index) => {
