@@ -19,13 +19,11 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({ onNewGame, onLeave
     scores,
     leaveRoom,
     createRoom,
-    socket,
     clearError,
     currentPlayerId
   } = useSocket();
 
   const {
-    questionNumber,
     totalQuestions,
     winner,
     isTie,
@@ -119,7 +117,7 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({ onNewGame, onLeave
     }
 
     if (winner) {
-      const winnerName = players.find(p => p.id === winner)?.name || 'Unknown';
+      const winnerName = winner.name;
       return (
         <div className="winner-announcement">
           <h2>🏆 {winnerName} Wins!</h2>
@@ -137,11 +135,11 @@ export const ResultsScreen: React.FC<ResultsScreenProps> = ({ onNewGame, onLeave
       <ol className="leaderboard" role="list">
         {leaderboard.map((player, index) => {
           const position = index + 1;
-          const isWinner = player.playerId === winner;
+          const isWinner = winner && player.id === winner.id;
           
           return (
             <li 
-              key={player.playerId} 
+              key={player.id} 
               className={`leaderboard-item ${isWinner ? 'winner' : ''}`}
             >
               <div className="position">

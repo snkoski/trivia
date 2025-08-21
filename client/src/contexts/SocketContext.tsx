@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import { socketService } from '../services/socket';
 import type { TypedSocket } from '../services/socket';
 import type { Room, Player, ClientQuestion, GameState } from '@trivia/shared';

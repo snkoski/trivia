@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { GameProvider, useGame } from './GameContext';
-import React from 'react';
 
 describe('GameContext', () => {
   beforeEach(() => {

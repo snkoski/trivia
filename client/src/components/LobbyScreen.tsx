@@ -16,13 +16,12 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
   const { 
     isConnected, 
     error, 
-    roomCode, 
     currentRoom, 
     createRoom, 
     joinRoom, 
     clearError 
   } = useSocket();
-  const { username, setUsername, hasUsername, clearUsername } = useUser();
+  const { username, setUsername, hasUsername } = useUser();
   const { 
     isInLobby, 
     joinLobby, 

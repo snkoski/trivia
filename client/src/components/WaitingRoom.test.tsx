@@ -1,9 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { WaitingRoom } from './WaitingRoom';
 import { useSocket } from '../contexts/SocketContext';
-import React from 'react';
 
 // Mock the SocketContext
 vi.mock('../contexts/SocketContext', () => ({
@@ -34,6 +33,7 @@ describe('WaitingRoom', () => {
     players: mockRoom.players,
     isHost: true,
     gameState: 'waiting' as const,
+    currentPlayerId: 'player1',
     startGame: mockStartGame,
     leaveRoom: mockLeaveRoom,
     socket: { id: 'player1' },

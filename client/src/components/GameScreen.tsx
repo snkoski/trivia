@@ -35,8 +35,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
     formatTime,
     allPlayersAnswered,
     isAnswerCorrect,
-    setQuestionProgress,
-    incrementQuestion
+    setQuestionProgress
   } = useGame();
 
   const audioRef = useRef<HTMLAudioElement>(null);

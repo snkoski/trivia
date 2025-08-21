@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor, renderHook, act } from '@testing-library/react';
+import { render, screen, renderHook, act } from '@testing-library/react';
 import { SocketProvider, useSocket } from './SocketContext';
 import { socketService } from '../services/socket';
-import React from 'react';
 
 // Mock the socket service
 vi.mock('../services/socket', () => ({

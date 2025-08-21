@@ -130,7 +130,7 @@ class SocketService {
     this.socket.on('room-created', callback);
   }
 
-  onRoomJoined(callback: (room: Room) => void): void {
+  onRoomJoined(callback: (data: { room: Room; currentPlayerId: string }) => void): void {
     if (!this.socket) throw new Error('Socket not connected');
     this.socket.on('room-joined', callback);
   }
