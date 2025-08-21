@@ -108,6 +108,22 @@ class SocketService {
     this.socket.emit('send-lobby-message', message);
   }
 
+  // Lobby game operations
+  startLobbyGame(): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.emit('start-lobby-game');
+  }
+
+  submitLobbyAnswer(answerIndex: number): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.emit('submit-lobby-answer', answerIndex);
+  }
+
+  requestLobbyNextQuestion(): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.emit('request-lobby-next-question');
+  }
+
   // Event listeners - to be used by React components
   onRoomCreated(callback: (roomCode: string) => void): void {
     if (!this.socket) throw new Error('Socket not connected');
@@ -229,6 +245,42 @@ class SocketService {
     } else {
       this.socket.off('lobby-chat-history');
     }
+  }
+
+  // Lobby game event listeners
+  onLobbyGameStarting(callback: (countdown: number) => void): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.on('lobby-game-starting', callback);
+  }
+
+  onLobbyGameStarted(callback: (question: ClientQuestion) => void): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.on('lobby-game-started', callback);
+  }
+
+  onLobbyGameNextQuestion(callback: (question: ClientQuestion) => void): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.on('lobby-game-next-question', callback);
+  }
+
+  onLobbyGamePlayerAnswered(callback: (playerId: string) => void): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.on('lobby-game-player-answered', callback);
+  }
+
+  onLobbyGameRoundResults(callback: (scores: Record<string, number>, correctAnswer: number) => void): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.on('lobby-game-round-results', callback);
+  }
+
+  onLobbyGameEnded(callback: (finalScores: Record<string, number>) => void): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.on('lobby-game-ended', callback);
+  }
+
+  onLobbyGameCancelled(callback: (reason: string) => void): void {
+    if (!this.socket) throw new Error('Socket not connected');
+    this.socket.on('lobby-game-cancelled', callback);
   }
 
   // Clean up listeners

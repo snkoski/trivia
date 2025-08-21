@@ -20,6 +20,8 @@ app.use(cors({
 
 app.use(express.json());
 
+// Remove the problematic middleware
+
 // Serve static audio files from client's public directory
 app.use('/audio', express.static(path.join(__dirname, '../../client/public/audio')));
 
@@ -34,9 +36,18 @@ const io = new SocketIOServer<ClientToServerEvents, ServerToClientEvents>(httpSe
   pingInterval: 25000
 });
 
+// Test Socket.IO is working
+console.log('Socket.IO server initialized:', !!io);
+console.log('HTTP server created:', !!httpServer);
+
 // Initialize services
 const roomManager = new RoomManager();
 const socketHandler = new SocketHandler(io, roomManager);
+
+// Debug Socket.IO connection
+io.on('connection', (socket) => {
+  console.log('DEBUG: Socket.IO connection established:', socket.id);
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {

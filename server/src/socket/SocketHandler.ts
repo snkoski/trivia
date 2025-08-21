@@ -20,6 +20,7 @@ export class SocketHandler {
   private roomManager: RoomManager;
   private gameEngines: Map<string, GameEngine>; // roomCode -> GameEngine
   private socketPlayerMap: Map<string, string>; // socketId -> playerId
+  private lobbyGameEngine: GameEngine | null = null; // Global lobby game engine
 
   constructor(io: SocketIOServer, roomManager: RoomManager) {
     this.io = io;
@@ -87,6 +88,18 @@ export class SocketHandler {
 
       socket.on('send-lobby-message', (message: string) => {
         this.handleLobbyChatMessage(socketWithData, message);
+      });
+
+      socket.on('start-lobby-game', () => {
+        this.handleStartLobbyGame(socketWithData);
+      });
+
+      socket.on('submit-lobby-answer', (answerIndex: number) => {
+        this.handleSubmitLobbyAnswer(socketWithData, answerIndex);
+      });
+
+      socket.on('request-lobby-next-question', () => {
+        this.handleLobbyNextQuestion(socketWithData);
       });
 
       // Handle disconnect
@@ -413,6 +426,186 @@ export class SocketHandler {
     } catch (error) {
       socket.emit('error', 'Failed to send message');
       console.error('Lobby chat error:', error);
+    }
+  }
+
+  // Lobby game handlers
+  private handleStartLobbyGame(socket: SocketWithData) {
+    try {
+      if (!socket.data.inLobby) {
+        socket.emit('error', 'Not in lobby');
+        return;
+      }
+
+      if (!globalLobby.canStartLobbyGame()) {
+        socket.emit('error', 'Cannot start lobby game (need at least 2 players or game already in progress)');
+        return;
+      }
+
+      const lobbyGame = globalLobby.startLobbyGame(socket.data.playerId);
+      if (!lobbyGame) {
+        socket.emit('error', 'Failed to start lobby game');
+        return;
+      }
+
+      // Convert lobby players to game players
+      const gamePlayers = lobbyGame.players.map(lobbyPlayer => ({
+        id: lobbyPlayer.id,
+        name: lobbyPlayer.name,
+        score: 0,
+        isConnected: lobbyPlayer.isConnected,
+        hasAnswered: false,
+        isHost: lobbyPlayer.id === socket.data.playerId
+      }));
+
+      // Create lobby game engine
+      this.lobbyGameEngine = new GameEngine(mockQuestions, gamePlayers);
+      
+      // Start countdown
+      this.startLobbyGameCountdown();
+      
+      console.log(`${socket.data.playerName} started lobby game with ${lobbyGame.players.length} players`);
+    } catch (error) {
+      socket.emit('error', 'Failed to start lobby game');
+      console.error('Start lobby game error:', error);
+    }
+  }
+
+  private startLobbyGameCountdown() {
+    let countdown = 5;
+    
+    const countdownInterval = setInterval(() => {
+      this.io.to('global-lobby').emit('lobby-game-starting', countdown);
+      
+      if (countdown <= 0) {
+        clearInterval(countdownInterval);
+        this.startLobbyGameNow();
+      } else {
+        countdown--;
+      }
+    }, 1000);
+  }
+
+  private startLobbyGameNow() {
+    try {
+      if (!this.lobbyGameEngine) {
+        this.io.to('global-lobby').emit('lobby-game-cancelled', 'Game engine not found');
+        return;
+      }
+
+      const result = this.lobbyGameEngine.startGame();
+      
+      if (result.success) {
+        globalLobby.updateLobbyGameState('playing');
+        this.io.to('global-lobby').emit('lobby-game-started', result.question!);
+        console.log('Lobby game started');
+      } else {
+        globalLobby.cancelLobbyGame(result.error || 'Failed to start');
+        this.io.to('global-lobby').emit('lobby-game-cancelled', result.error || 'Failed to start');
+      }
+    } catch (error) {
+      console.error('Start lobby game now error:', error);
+      globalLobby.cancelLobbyGame('Internal error');
+      this.io.to('global-lobby').emit('lobby-game-cancelled', 'Internal error');
+    }
+  }
+
+  private handleSubmitLobbyAnswer(socket: SocketWithData, answerIndex: number) {
+    try {
+      if (!socket.data.inLobby) {
+        socket.emit('error', 'Not in lobby');
+        return;
+      }
+
+      if (!this.lobbyGameEngine) {
+        socket.emit('error', 'No lobby game in progress');
+        return;
+      }
+
+      const result = this.lobbyGameEngine.submitAnswer(socket.data.playerId, answerIndex);
+      
+      if (result.success) {
+        // Notify all players that this player answered
+        this.io.to('global-lobby').emit('lobby-game-player-answered', socket.data.playerId);
+        
+        // Check if all players have answered
+        const allAnswered = this.lobbyGameEngine.getPlayers().every(p => p.hasAnswered);
+        
+        if (allAnswered) {
+          // Send round results to all players
+          const scores = this.lobbyGameEngine.getScores();
+          const currentQuestion = this.lobbyGameEngine.getQuestions()[this.lobbyGameEngine.getCurrentQuestionIndex()];
+          
+          this.io.to('global-lobby').emit('lobby-game-round-results', scores, currentQuestion.correctAnswer);
+        }
+      } else {
+        socket.emit('error', result.error || 'Failed to submit answer');
+      }
+    } catch (error) {
+      socket.emit('error', 'Failed to submit answer');
+      console.error('Submit lobby answer error:', error);
+    }
+  }
+
+  private handleLobbyNextQuestion(socket: SocketWithData) {
+    try {
+      if (!socket.data.inLobby) {
+        socket.emit('error', 'Not in lobby');
+        return;
+      }
+
+      if (!this.lobbyGameEngine) {
+        socket.emit('error', 'No lobby game in progress');
+        return;
+      }
+
+      // Check if player started the game (is host)
+      const lobbyGame = globalLobby.getLobbyGame();
+      if (!lobbyGame || lobbyGame.startedBy !== socket.data.playerId) {
+        socket.emit('error', 'Only the game starter can advance questions');
+        return;
+      }
+
+      const result = this.lobbyGameEngine.nextQuestion();
+      
+      if (result.success) {
+        if (result.gameFinished) {
+          // Game is over
+          const endResult = this.lobbyGameEngine.endGame();
+          globalLobby.endLobbyGame();
+          
+          // Submit scores to global leaderboard
+          const gameScores = this.lobbyGameEngine.getScores();
+          const playerScores = this.lobbyGameEngine.getPlayers().map(player => ({
+            playerId: player.id,
+            playerName: player.name,
+            score: gameScores[player.id] || 0
+          }));
+          
+          const gameId = globalLeaderboard.submitGameResults(
+            mockQuestions,
+            'lobby-game',
+            playerScores,
+            endResult.duration
+          );
+          
+          console.log(`Lobby game ended, scores submitted to global leaderboard ${gameId}`);
+          
+          this.io.to('global-lobby').emit('lobby-game-ended', endResult.finalScores!);
+          
+          // Clean up game engine
+          this.lobbyGameEngine = null;
+        } else {
+          // Send next question
+          globalLobby.updateLobbyGameQuestion(this.lobbyGameEngine.getCurrentQuestionIndex());
+          this.io.to('global-lobby').emit('lobby-game-next-question', result.question!);
+        }
+      } else {
+        socket.emit('error', result.error || 'Failed to advance question');
+      }
+    } catch (error) {
+      socket.emit('error', 'Failed to advance question');
+      console.error('Lobby next question error:', error);
     }
   }
 

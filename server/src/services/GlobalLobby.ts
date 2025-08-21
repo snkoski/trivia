@@ -1,9 +1,12 @@
-import { LobbyPlayer, ChatMessage } from '../../../packages/shared/dist';
+import { LobbyPlayer, ChatMessage, LobbyGame, LobbyGameState } from '../../../packages/shared/dist';
 
 export class GlobalLobby {
   private players: Map<string, LobbyPlayer> = new Map();
   private chatMessages: ChatMessage[] = [];
   private readonly MAX_CHAT_HISTORY = 100;
+  
+  // Lobby game state
+  private lobbyGame: LobbyGame | null = null;
 
   // Player management
   addPlayer(playerId: string, playerName: string): LobbyPlayer {
@@ -110,12 +113,75 @@ export class GlobalLobby {
     }
   }
 
+  // Lobby game management
+  canStartLobbyGame(): boolean {
+    const connectedPlayers = this.getConnectedPlayers();
+    return connectedPlayers.length >= 2 && 
+           (!this.lobbyGame || this.lobbyGame.state === 'idle' || this.lobbyGame.state === 'finished');
+  }
+
+  startLobbyGame(startedByPlayerId: string): LobbyGame | null {
+    if (!this.canStartLobbyGame()) {
+      return null;
+    }
+
+    const connectedPlayers = this.getConnectedPlayers();
+    const startedByPlayer = this.players.get(startedByPlayerId);
+    
+    if (!startedByPlayer) {
+      return null;
+    }
+
+    this.lobbyGame = {
+      state: 'starting',
+      currentQuestionIndex: 0,
+      players: connectedPlayers,
+      startedAt: new Date(),
+      startedBy: startedByPlayerId
+    };
+
+    this.addSystemMessage(`${startedByPlayer.name} started a lobby game with ${connectedPlayers.length} players!`);
+    
+    return this.lobbyGame;
+  }
+
+  getLobbyGame(): LobbyGame | null {
+    return this.lobbyGame;
+  }
+
+  updateLobbyGameState(state: LobbyGameState): void {
+    if (this.lobbyGame) {
+      this.lobbyGame.state = state;
+    }
+  }
+
+  updateLobbyGameQuestion(questionIndex: number): void {
+    if (this.lobbyGame) {
+      this.lobbyGame.currentQuestionIndex = questionIndex;
+    }
+  }
+
+  endLobbyGame(): void {
+    if (this.lobbyGame) {
+      this.lobbyGame.state = 'finished';
+      this.addSystemMessage('Lobby game ended! Great job everyone! 🎉');
+    }
+  }
+
+  cancelLobbyGame(reason: string): void {
+    if (this.lobbyGame) {
+      this.lobbyGame.state = 'idle';
+      this.addSystemMessage(`Lobby game cancelled: ${reason}`);
+    }
+  }
+
   // Stats
   getStats() {
     return {
       totalPlayers: this.players.size,
       connectedPlayers: this.getConnectedPlayers().length,
-      totalMessages: this.chatMessages.length
+      totalMessages: this.chatMessages.length,
+      lobbyGameState: this.lobbyGame?.state || 'idle'
     };
   }
 }

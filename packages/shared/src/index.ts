@@ -11,6 +11,7 @@ export interface Question {
 export type ClientQuestion = Omit<Question, 'correctAnswer'>;
 
 export type GameState = 'waiting' | 'playing' | 'finished';
+export type LobbyGameState = 'idle' | 'starting' | 'playing' | 'results' | 'finished';
 
 // Player Types
 export interface Player {
@@ -38,6 +39,15 @@ export interface ChatMessage {
   message: string;
   timestamp: Date;
   type: 'message' | 'system';
+}
+
+// Lobby Game Types
+export interface LobbyGame {
+  state: LobbyGameState;
+  currentQuestionIndex: number;
+  players: LobbyPlayer[];
+  startedAt?: Date;
+  startedBy?: string;
 }
 
 // Room Types  
@@ -70,6 +80,15 @@ export interface ServerToClientEvents {
   'lobby-player-left': (playerId: string) => void;
   'lobby-chat-message': (message: ChatMessage) => void;
   'lobby-chat-history': (messages: ChatMessage[]) => void;
+  
+  // Lobby game events
+  'lobby-game-starting': (countdown: number) => void;
+  'lobby-game-started': (question: ClientQuestion) => void;
+  'lobby-game-next-question': (question: ClientQuestion) => void;
+  'lobby-game-player-answered': (playerId: string) => void;
+  'lobby-game-round-results': (scores: Record<string, number>, correctAnswer: number) => void;
+  'lobby-game-ended': (finalScores: Record<string, number>) => void;
+  'lobby-game-cancelled': (reason: string) => void;
 }
 
 export interface ClientToServerEvents {
@@ -85,6 +104,11 @@ export interface ClientToServerEvents {
   'join-lobby': (playerName: string) => void;
   'leave-lobby': () => void;
   'send-lobby-message': (message: string) => void;
+  
+  // Lobby game events
+  'start-lobby-game': () => void;
+  'submit-lobby-answer': (answerIndex: number) => void;
+  'request-lobby-next-question': () => void;
 }
 
 // API Response Types

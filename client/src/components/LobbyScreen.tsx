@@ -23,7 +23,22 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
     clearError 
   } = useSocket();
   const { username, setUsername, hasUsername, clearUsername } = useUser();
-  const { isInLobby, joinLobby, leaveLobby, players } = useLobby();
+  const { 
+    isInLobby, 
+    joinLobby, 
+    leaveLobby, 
+    players, 
+    gameState, 
+    currentQuestion, 
+    gameScores, 
+    correctAnswer, 
+    hasAnswered, 
+    countdown,
+    startLobbyGame, 
+    submitLobbyAnswer, 
+    requestLobbyNextQuestion,
+    resetLobbyGame 
+  } = useLobby();
 
   const [lobbyState, setLobbyState] = useState<LobbyState>(hasUsername ? 'main' : 'username');
   const [usernameInput, setUsernameInput] = useState('');
@@ -169,23 +184,154 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
     </div>
   );
 
-  const renderMainScreen = () => (
-    <div className="lobby-main">
-      <div className="lobby-header">
-        <h1>Trivia Game Lobby</h1>
-        <div className="username-display">
-          <span>Playing as: <strong>{username}</strong></span>
+  const renderLobbyGameContent = () => {
+    if (gameState === 'starting' && countdown !== null) {
+      return (
+        <div className="lobby-game-starting">
+          <h2>🎮 Big Game Starting!</h2>
+          <div className="countdown-display">
+            <span className="countdown-number">{countdown}</span>
+          </div>
+          <p>Get ready to play with {players.length} players!</p>
+        </div>
+      );
+    }
+
+    if (gameState === 'playing' && currentQuestion) {
+      return (
+        <div className="lobby-game-playing">
+          <div className="question-section">
+            <h3>Question {(gameScores && Object.keys(gameScores).length > 0) ? 'In Progress' : '1'}</h3>
+            <div className="question-text">{currentQuestion.question}</div>
+            {currentQuestion.audioUrl && (
+              <audio controls src={currentQuestion.audioUrl} />
+            )}
+            <div className="answer-options">
+              {currentQuestion.options.map((option, index) => (
+                <button
+                  key={index}
+                  onClick={() => submitLobbyAnswer(index)}
+                  disabled={hasAnswered}
+                  className={`answer-button ${hasAnswered ? 'answered' : ''} ${
+                    correctAnswer === index ? 'correct' : 
+                    hasAnswered && correctAnswer !== null && correctAnswer !== index ? 'incorrect' : ''
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+            {hasAnswered && (
+              <div className="waiting-message">
+                <p>Waiting for other players to answer...</p>
+              </div>
+            )}
+            {correctAnswer !== null && (
+              <div className="round-results">
+                <h4>Round Complete!</h4>
+                <div className="scores">
+                  {Object.entries(gameScores).map(([playerId, score]) => {
+                    const player = players.find(p => p.id === playerId);
+                    return player ? (
+                      <div key={playerId} className="score-item">
+                        <span>{player.name}</span>
+                        <span>{score} points</span>
+                      </div>
+                    ) : null;
+                  })}
+                </div>
+                <button onClick={requestLobbyNextQuestion} className="next-button">
+                  Next Question
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (gameState === 'finished') {
+      return (
+        <div className="lobby-game-finished">
+          <h2>🎉 Big Game Complete!</h2>
+          <div className="final-results">
+            <h3>Final Scores</h3>
+            {Object.entries(gameScores)
+              .sort(([,a], [,b]) => b - a)
+              .map(([playerId, score], index) => {
+                const player = players.find(p => p.id === playerId);
+                return player ? (
+                  <div key={playerId} className={`final-score-item ${index === 0 ? 'winner' : ''}`}>
+                    <span className="rank">#{index + 1}</span>
+                    <span className="name">{player.name}</span>
+                    <span className="score">{score} points</span>
+                  </div>
+                ) : null;
+              })}
+          </div>
           <button 
-            onClick={handleChangeUsername}
-            className="change-username-button"
-            title="Change username"
+            onClick={resetLobbyGame} 
+            className="back-to-lobby-button"
           >
-            ✏️
+            Back to Lobby
           </button>
         </div>
-        {renderConnectionStatus()}
-        {renderError()}
-      </div>
+      );
+    }
+
+    return null;
+  };
+
+  const renderMainScreen = () => {
+    // Show game content if there's an active lobby game
+    if (gameState !== 'idle') {
+      return (
+        <div className="lobby-main">
+          <div className="lobby-header">
+            <h1>Trivia Game Lobby</h1>
+            <div className="username-display">
+              <span>Playing as: <strong>{username}</strong></span>
+              <button 
+                onClick={handleChangeUsername}
+                className="change-username-button"
+                title="Change username"
+              >
+                ✏️
+              </button>
+            </div>
+            {renderConnectionStatus()}
+            {renderError()}
+          </div>
+          
+          <div className="lobby-game-container">
+            {renderLobbyGameContent()}
+          </div>
+          
+          <div className="lobby-sidebar-during-game">
+            <LobbyPlayerList />
+          </div>
+        </div>
+      );
+    }
+
+    // Show normal lobby when no game is active
+    return (
+      <div className="lobby-main">
+        <div className="lobby-header">
+          <h1>Trivia Game Lobby</h1>
+          <div className="username-display">
+            <span>Playing as: <strong>{username}</strong></span>
+            <button 
+              onClick={handleChangeUsername}
+              className="change-username-button"
+              title="Change username"
+            >
+              ✏️
+            </button>
+          </div>
+          {renderConnectionStatus()}
+          {renderError()}
+        </div>
       
       <div className="lobby-content">
         <div className="lobby-sidebar">
@@ -218,6 +364,19 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
               </button>
             </div>
             
+            <div className="option-card">
+              <h2>🎮 Start Big Game</h2>
+              <p>Play trivia with everyone in the lobby!</p>
+              <button 
+                onClick={startLobbyGame}
+                disabled={!isConnected || players.length < 2 || gameState !== 'idle'}
+                className="primary-button big-game-button"
+                title={players.length < 2 ? 'Need at least 2 players' : gameState !== 'idle' ? 'Game already in progress' : 'Start a game with all lobby players'}
+              >
+                {gameState === 'idle' ? 'Start Big Game' : gameState === 'starting' ? 'Starting...' : 'Game In Progress'}
+              </button>
+            </div>
+
             <div className="option-card">
               <h2>🏆 Global Leaderboard</h2>
               <p>View top scores from all players</p>
@@ -252,7 +411,8 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
         <GlobalLeaderboard onClose={() => setShowLeaderboard(false)} />
       )}
     </div>
-  );
+    );
+  };
 
   const renderCreateForm = () => (
     <div className="lobby-form">
