@@ -140,6 +140,24 @@ app.get('/api/leaderboard/player/:playerId', (req, res) => {
   });
 });
 
+// Reset/clear all leaderboard data
+app.delete('/api/leaderboard/reset', (req, res) => {
+  try {
+    globalLeaderboard.clear();
+    console.log('Global leaderboard has been reset');
+    res.json({ 
+      success: true, 
+      message: 'Leaderboard has been reset successfully' 
+    });
+  } catch (error) {
+    console.error('Error resetting leaderboard:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to reset leaderboard' 
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Server error:', err);

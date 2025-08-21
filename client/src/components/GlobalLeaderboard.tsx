@@ -51,6 +51,40 @@ export const GlobalLeaderboard: React.FC<GlobalLeaderboardProps> = ({ onClose })
     }
   };
 
+  const handleResetLeaderboard = async () => {
+    if (!window.confirm('Are you sure you want to reset the entire leaderboard? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'}/api/leaderboard/reset`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to reset leaderboard: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      if (result.success) {
+        // Clear the local data
+        setLeaderboardData(null);
+        // Fetch the updated (empty) leaderboard
+        await fetchLeaderboard();
+      } else {
+        throw new Error(result.error || 'Failed to reset leaderboard');
+      }
+    } catch (err) {
+      console.error('Error resetting leaderboard:', err);
+      setError(err instanceof Error ? err.message : 'Failed to reset leaderboard');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatDuration = (ms?: number): string => {
     if (!ms) return 'N/A';
     const seconds = Math.floor(ms / 1000);
@@ -151,9 +185,14 @@ export const GlobalLeaderboard: React.FC<GlobalLeaderboardProps> = ({ onClose })
                 <span className='total-players'>
                   {leaderboardData.total} total score{leaderboardData.total !== 1 ? 's' : ''}
                 </span>
-                <button onClick={fetchLeaderboard} className='refresh-button' title='Refresh leaderboard'>
-                  <span className='refresh-icon'>🔄</span>
-                </button>
+                <div className='button-group'>
+                  <button onClick={fetchLeaderboard} className='refresh-button' title='Refresh leaderboard'>
+                    <span className='refresh-icon'>🔄</span>
+                  </button>
+                  <button onClick={handleResetLeaderboard} className='reset-button' title='Reset leaderboard'>
+                    <span className='reset-icon'>🗑️</span> Reset
+                  </button>
+                </div>
               </div>
 
               <div className='leaderboard-table-container'>

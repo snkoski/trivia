@@ -222,6 +222,44 @@
   transform: rotate(180deg);
 }
 
+/* Reset Button */
+.reset-button {
+  background: linear-gradient(135deg, #ee5a6f 0%, #f44336 100%);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reset-button:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(244, 67, 54, 0.5);
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+}
+
+.reset-button:active {
+  transform: translateY(0) scale(0.95);
+}
+
+.reset-icon {
+  font-size: 1rem;
+}
+
+/* Button Group */
+.leaderboard-stats .button-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 /* Table */
 .leaderboard-table-container {
   overflow-x: auto;
