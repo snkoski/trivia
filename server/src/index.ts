@@ -23,23 +23,6 @@ app.use(express.json());
 // Serve static audio files from client's public directory
 app.use('/audio', express.static(path.join(__dirname, '../../client/public/audio')));
 
-// Serve client build files in production
-const clientDistPath = path.join(__dirname, '../../client/dist');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('Client dist path:', clientDistPath);
-
-if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
-  app.use(express.static(clientDistPath));
-  
-  // Handle client-side routing - serve index.html for non-API routes
-  app.get('*', (req, res) => {
-    // Don't serve index.html for API routes
-    if (req.path.startsWith('/api/') || req.path.startsWith('/health') || req.path.startsWith('/audio/')) {
-      return res.status(404).json({ error: 'Route not found' });
-    }
-    res.sendFile(path.join(clientDistPath, 'index.html'));
-  });
-}
 
 // Configure Socket.IO with CORS
 const io = new SocketIOServer<ClientToServerEvents, ServerToClientEvents>(httpServer, {
@@ -175,6 +158,20 @@ app.delete('/api/leaderboard/reset', (req, res) => {
     });
   }
 });
+
+// Serve client build files in production (MUST come after all API routes)
+const clientDistPath = path.join(__dirname, '../../client/dist');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('Client dist path:', clientDistPath);
+
+if (process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) {
+  app.use(express.static(clientDistPath));
+  
+  // Handle client-side routing - serve index.html for non-API routes
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
