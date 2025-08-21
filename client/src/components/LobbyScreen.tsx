@@ -44,6 +44,8 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
   const [lobbyState, setLobbyState] = useState<LobbyState>(hasUsername ? 'main' : 'username');
   const [usernameInput, setUsernameInput] = useState('');
   const [roomCodeInput, setRoomCodeInput] = useState('');
+  const [spiritAnimalInput, setSpiritAnimalInput] = useState('');
+  const [superheroNameInput, setSuperheroNameInput] = useState('');
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   
@@ -252,6 +254,30 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
           <span className="error-text">{validationErrors.username}</span>
         )}
       </div>
+
+      <div className="form-group">
+        <label htmlFor="spirit-animal">Spirit Animal</label>
+        <input
+          id="spirit-animal"
+          type="text"
+          placeholder="What's your spirit animal?"
+          value={spiritAnimalInput}
+          onChange={(e) => setSpiritAnimalInput(e.target.value)}
+          maxLength={30}
+        />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="superhero-name">Superhero Name</label>
+        <input
+          id="superhero-name"
+          type="text"
+          placeholder="Your superhero alter ego"
+          value={superheroNameInput}
+          onChange={(e) => setSuperheroNameInput(e.target.value)}
+          maxLength={30}
+        />
+      </div>
       
       <div className="form-actions">
         <button 
@@ -265,6 +291,8 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
           <button 
             onClick={() => {
               setUsernameInput('');
+              setSpiritAnimalInput('');
+              setSuperheroNameInput('');
               setValidationErrors({});
               setLobbyState('main');
             }}
