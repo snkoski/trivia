@@ -387,12 +387,19 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
             </div>
             <div className="question-text">{currentQuestion.question}</div>
             {currentQuestion.audioUrl && (
-              <audio 
-                ref={audioRef}
-                controls 
-                src={currentQuestion.audioUrl}
-                preload="auto"
-              />
+              <div className="lobby-audio-section">
+                <audio 
+                  ref={audioRef}
+                  controls 
+                  src={currentQuestion.audioUrl}
+                  preload="auto"
+                />
+                {correctAnswer !== null && (
+                  <button onClick={requestLobbyNextQuestion} className="lobby-next-button primary-button">
+                    Next Question
+                  </button>
+                )}
+              </div>
             )}
             <div className="answer-options">
               {currentQuestion.options.map((option, index) => {
@@ -452,9 +459,6 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({ onRoomJoined }) => {
                     ) : null;
                   })}
                 </div>
-                <button onClick={requestLobbyNextQuestion} className="next-button">
-                  Next Question
-                </button>
               </div>
             )}
           </div>

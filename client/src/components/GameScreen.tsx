@@ -233,6 +233,15 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
               style={{ width: `${audioProgress}%` }}
             />
           </div>
+          {/* Next Question Button next to audio controls */}
+          {showResults && isHost && (
+            <button
+              onClick={handleNextQuestion}
+              className="next-question-button primary-button audio-next-button"
+            >
+              {questionNumber >= totalQuestions ? 'End Game' : 'Next Question'}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -319,28 +328,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ onGameEnd }) => {
         <div className="correct-answer">
           Correct Answer: {correctOptionText}
         </div>
-
-        {isHost && questionNumber < totalQuestions && (
-          <div className="host-controls">
-            <button
-              onClick={handleNextQuestion}
-              className="next-question-button primary-button"
-            >
-              Next Question
-            </button>
-          </div>
-        )}
-        
-        {isHost && questionNumber >= totalQuestions && (
-          <div className="host-controls">
-            <button
-              onClick={handleNextQuestion}
-              className="next-question-button primary-button"
-            >
-              End Game
-            </button>
-          </div>
-        )}
       </div>
     );
   };

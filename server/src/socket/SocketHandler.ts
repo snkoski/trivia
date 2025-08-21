@@ -284,7 +284,7 @@ export class SocketHandler {
       // Check if player is host
       const player = room.players.find(p => p.id === socket.data.playerId);
       if (!player?.isHost) {
-        socket.emit('error', 'Only host can advance to next question');
+        socket.emit('error', 'Only Sean can advance questions');
         return;
       }
 
@@ -634,7 +634,7 @@ export class SocketHandler {
       // Check if player started the game (is host)
       const lobbyGame = globalLobby.getLobbyGame();
       if (!lobbyGame || lobbyGame.startedBy !== socket.data.playerId) {
-        socket.emit('error', 'Only the game starter can advance questions');
+        socket.emit('error', 'Only Shawn can advance questions');
         return;
       }
 

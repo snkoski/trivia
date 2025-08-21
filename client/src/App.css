@@ -583,11 +583,59 @@ html, body {
   transform: scale(0.95);
 }
 
-.audio-progress {
+.audio-controls {
   display: flex;
   align-items: center;
   gap: 15px;
   width: 100%;
+}
+
+.audio-progress {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+}
+
+.audio-next-button {
+  margin-left: auto;
+  padding: 10px 20px !important;
+  font-size: 0.9rem !important;
+  min-width: auto !important;
+  white-space: nowrap;
+}
+
+/* Lobby Audio Section */
+.lobby-audio-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin: 20px 0;
+  flex-wrap: wrap;
+}
+
+.lobby-audio-section audio {
+  flex: 1;
+  min-width: 300px;
+}
+
+.lobby-next-button {
+  padding: 12px 24px !important;
+  font-size: 1rem !important;
+  min-width: auto !important;
+  white-space: nowrap;
+  margin: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .lobby-audio-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .lobby-audio-section audio {
+    min-width: auto;
+  }
 }
 
 .time-display {
