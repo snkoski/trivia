@@ -179,7 +179,7 @@
 
 .total-players {
   font-size: 1rem;
-  color: #4a5568;
+  color: #2d3748;
   font-weight: 600;
   padding: 8px 16px;
   background: rgba(102, 126, 234, 0.1);
@@ -325,6 +325,17 @@
   box-shadow: 8px 0 0 rgba(255, 215, 0, 0.4);
 }
 
+/* Ensure player names are dark on top-three rows */
+.leaderboard-table tbody tr.top-three .player-name {
+  color: #1a202c !important;
+  text-shadow: none;
+}
+
+.leaderboard-table tbody tr.top-three:hover .player-name {
+  color: #1a202c !important;
+  text-shadow: none;
+}
+
 /* Cell Styles */
 .rank-cell {
   width: 80px;
@@ -376,7 +387,7 @@
 
 .rank-number {
   font-weight: 700;
-  color: #4a5568;
+  color: #2d3748;
   font-size: 1.1rem;
 }
 
@@ -398,7 +409,7 @@
 
 .player-name {
   font-weight: 700;
-  color: #2d3748;
+  color: #1a202c;
   font-size: 1.05rem;
 }
 
@@ -469,9 +480,9 @@
 
 .duration {
   font-family: 'SF Mono', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
-  color: #4a5568;
+  color: #2d3748;
   font-weight: 600;
-  background: rgba(74, 85, 104, 0.1);
+  background: rgba(74, 85, 104, 0.15);
   padding: 4px 10px;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -483,7 +494,7 @@
 }
 
 .date {
-  color: #718096;
+  color: #4a5568;
   font-size: 0.85rem;
   font-weight: 500;
 }
@@ -531,7 +542,7 @@
 
 .empty-state p {
   margin: 0 0 16px 0;
-  color: #718096;
+  color: #4a5568;
   font-size: 1.1rem;
   font-weight: 500;
 }
@@ -565,7 +576,7 @@
 }
 
 .error-state p {
-  color: #6c757d;
+  color: #4a5568;
   margin: 0 0 24px 0;
 }
 
