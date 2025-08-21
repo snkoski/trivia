@@ -1,0 +1,17 @@
+[build]
+builder = "NIXPACKS"
+
+[build.nixpacks]
+buildCmd = "yarn install && yarn build"
+startCmd = "yarn workspace server start"
+
+[build.nixpacksConfig]
+nixpkgs = "nodejs_20"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 60
+
+[variables]
+NODE_VERSION = "20.19.0"
+NIXPACKS_NODE_VERSION = "20"
